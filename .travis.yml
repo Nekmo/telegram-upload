@@ -1,0 +1,35 @@
+# Config file for automatic testing at travis-ci.org
+# This file will be regenerated if you run travis_pypi_setup.py
+
+language: python
+python:
+  - 3.5
+  - 3.4
+  - 3.3
+  - 2.7
+  - 2.6
+
+# command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
+install:
+- if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then export PYVER=py27; fi
+- if [[ $TRAVIS_PYTHON_VERSION == '3.4' ]]; then export PYVER=py34; fi
+- if [[ $TRAVIS_PYTHON_VERSION == '3.5' ]]; then export PYVER=py35; fi
+- if [[ $TRAVIS_PYTHON_VERSION == '3.6' ]]; then export PYVER=py36; fi
+
+# command to run tests, e.g. python setup.py test
+script: COMMAND='coverage run' tox -e$PYVER
+after_success:
+- codecov
+
+# After you create the Github repo and add it to Travis, run the
+# travis_pypi_setup.py script to finish PyPI deployment setup
+deploy:
+  provider: pypi
+  distributions: sdist bdist_wheel
+  user: nekmo
+  password:
+    secure: PLEASE_REPLACE_ME
+  on:
+    tags: true
+    repo: Nekmo/telegram_upload
+    python: 2.7
