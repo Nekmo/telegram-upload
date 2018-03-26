@@ -10,6 +10,7 @@ from setuptools import setup, find_packages
 from pip.req import parse_requirements
 
 __dir__ = os.path.abspath(os.path.dirname(__file__))
+scripts_path = os.path.join(__dir__, 'scripts')
 
 
 def get_url(ir):
@@ -44,6 +45,14 @@ test_requirements = [
     # TODO: put package test requirements here
 ]
 
+if os.path.exists(scripts_path):
+    scripts_dir_name = scripts_path.replace(__dir__, '', 1)
+    scripts_dir_name = scripts_dir_name[1:] if scripts_dir_name.startswith(os.sep) else scripts_dir_name
+    scripts = [os.path.join(scripts_dir_name, file) for file in os.listdir(scripts_path)]
+else:
+    scripts = []
+
+
 setup(
     name='telegram-upload',
     version='0.1.0',
@@ -53,11 +62,11 @@ setup(
     author_email='contacto@nekmo.com',
     url='https://github.com/Nekmo/telegram_upload',
     packages=find_packages(include=['telegram_upload']),
-    entry_points={
-        'console_scripts': [
-            'telegram_upload=telegram_upload.cli:main'
-        ]
-    },
+    # entry_points={
+    #     'console_scripts': [
+    #         'telegram_upload=telegram_upload.management:main'
+    #     ]
+    # },
     include_package_data=True,
     install_requires=install_requires,
     dependency_links=dependency_links,
@@ -79,4 +88,5 @@ setup(
     test_suite='tests',
     tests_require=test_requirements,
     setup_requires=setup_requirements,
+    scripts=scripts,
 )

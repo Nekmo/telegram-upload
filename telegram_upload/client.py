@@ -21,6 +21,3 @@ class Client(TelegramClient):
 
             self.send_file(entity, file, progress_callback=progress)
             click.echo()
-
-    def progress_callback(self, tell, size):
-        click.echo('{} -- {}'.format(tell, size))
