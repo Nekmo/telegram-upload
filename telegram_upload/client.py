@@ -1,9 +1,30 @@
 import json
+import mimetypes
 
 import click
 import os
 from telethon import TelegramClient
+from telethon.tl.types import DocumentAttributeVideo
+from hachoir.metadata import extractMetadata
+from hachoir.parser import createParser
 
+
+CAPTION_MAX_LENGTH = 200
+
+mimetypes.init()
+
+
+def get_file_attributes(file):
+    attrs = []
+    mime = (mimetypes.guess_type(file)[0] or ('')).split('/')[0]
+    if mime == 'video':
+        metadata = extractMetadata(createParser(file))
+        attrs.append(DocumentAttributeVideo(
+            (0, metadata.get('duration').seconds)[metadata.has('duration')],
+            (0, metadata.get('width'))[metadata.has('width')],
+            (0, metadata.get('height'))[metadata.has('height')]
+        ))
+    return attrs
 
 
 class Client(TelegramClient):
@@ -19,5 +40,8 @@ class Client(TelegramClient):
                 bar.pos = 0
                 bar.update(current)
 
-            self.send_file(entity, file, progress_callback=progress)
+            name = '.'.join(os.path.basename(file).split('.')[:-1])
+            self.send_file(entity, file,
+                           caption=(name[:CAPTION_MAX_LENGTH] + '..') if len(name) > CAPTION_MAX_LENGTH else name,
+                           progress_callback=progress, attributes=get_file_attributes(file))
             click.echo()

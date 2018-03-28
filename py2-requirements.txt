@@ -1,1 +1,3 @@
 -r common-requirements.txt
+hachoir-parser
+hachoir-metadata
