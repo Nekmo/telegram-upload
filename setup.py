@@ -53,9 +53,25 @@ else:
     scripts = []
 
 
+packages = find_packages(__dir__)
+# Prevent include symbolic links
+for package in tuple(packages):
+    path = os.path.join(__dir__, package.replace('.', '/'))
+    if not os.path.exists(path):
+        continue
+    if not os.path.islink(path):
+        continue
+    packages.remove(package)
+
+
+modules = list(filter(lambda x: '.' not in x, packages))
+
+package_version = __import__(modules[0]).__version__
+
+
 setup(
     name='telegram-upload',
-    version='0.1.0',
+    version=package_version,
     description="Upload large files to Telegram using your account",
     long_description=readme + '\n\n' + history,
     author="Nekmo",
