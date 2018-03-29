@@ -1,6 +1,8 @@
-###############
-telegram-upload
-###############
+
+.. image:: https://raw.githubusercontent.com/Nekmo/telegram-upload/master/logo.png
+    :width: 100%
+
+|
 
 
 .. image:: https://img.shields.io/travis/Nekmo/telegram-upload.svg?style=flat-square&maxAge=2592000
@@ -28,6 +30,11 @@ telegram-upload
      :alt: Requirements Status
 
 
+###############
+telegram-upload
+###############
+
+
 Upload large files to Telegram using your account
 
 
@@ -40,7 +47,7 @@ To **install telegram-upload**, run this command in your terminal:
 This is the preferred method to install telegram-upload, as it will always install the most recent stable release.
 
 To use this program you need an Telegram account and your *App api_id/api_hash* (get it in
-`my.telegram.org <https://my.telegram.org/>`). The first time you use telegram-upload it requests your telephone,
+`my.telegram.org <https://my.telegram.org/>`_). The first time you use telegram-upload it requests your telephone,
 api_id and api_hash. To **send files**:
 
 .. code-block:: console
