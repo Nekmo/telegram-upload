@@ -1,5 +1,6 @@
 import json
 import mimetypes
+import struct
 
 import click
 import os
@@ -14,12 +15,23 @@ CAPTION_MAX_LENGTH = 200
 mimetypes.init()
 
 
+class DocumentAttributeStreamVideo(DocumentAttributeVideo):
+    def __bytes__(self):
+        return b''.join((
+            b'\xe6,\xf0\x0e',
+            struct.pack('<I', 10),
+            struct.pack('<i', self.duration),
+            struct.pack('<i', self.w),
+            struct.pack('<i', self.h),
+        ))
+
+
 def get_file_attributes(file):
     attrs = []
     mime = (mimetypes.guess_type(file)[0] or ('')).split('/')[0]
     if mime == 'video':
         metadata = extractMetadata(createParser(file))
-        attrs.append(DocumentAttributeVideo(
+        attrs.append(DocumentAttributeStreamVideo(
             (0, metadata.get('duration').seconds)[metadata.has('duration')],
             (0, metadata.get('width'))[metadata.has('width')],
             (0, metadata.get('height'))[metadata.has('height')]
