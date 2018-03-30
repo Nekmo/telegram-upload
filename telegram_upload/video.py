@@ -1,6 +1,7 @@
 import struct
 import subprocess
 import tempfile
+import os
 
 from hachoir.metadata import extractMetadata
 from hachoir.parser import createParser
