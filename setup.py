@@ -4,10 +4,17 @@
 """The setup script."""
 import os
 import uuid
-
+import pip
 import sys
+
 from setuptools import setup, find_packages
-from pip.req import parse_requirements
+from distutils.version import LooseVersion
+
+if LooseVersion(pip.__version__) >= "10.0.0":
+    from pip._internal.req import parse_requirements
+else:
+    from pip.req import parse_requirements
+
 
 __dir__ = os.path.abspath(os.path.dirname(__file__))
 scripts_path = os.path.join(__dir__, 'scripts')
