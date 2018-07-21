@@ -10,5 +10,6 @@ include py3-requirements.txt
 recursive-include tests *
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
+recursive-exclude * *.session
 
 recursive-include docs *.rst conf.py Makefile make.bat *.jpg *.png *.gif

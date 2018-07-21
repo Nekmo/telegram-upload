@@ -55,7 +55,7 @@ test_requirements = [
 if os.path.exists(scripts_path):
     scripts_dir_name = scripts_path.replace(__dir__, '', 1)
     scripts_dir_name = scripts_dir_name[1:] if scripts_dir_name.startswith(os.sep) else scripts_dir_name
-    scripts = [os.path.join(scripts_dir_name, file) for file in os.listdir(scripts_path)]
+    scripts = [os.path.join(scripts_dir_name, file) for file in os.listdir(scripts_path) if '.' not in file]
 else:
     scripts = []
 
