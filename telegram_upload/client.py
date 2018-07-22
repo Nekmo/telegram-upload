@@ -1,10 +1,15 @@
 import json
+from distutils.version import StrictVersion
 
 import click
 import os
+from telegram_upload.files import get_file_attributes, get_file_thumb
+from telethon.version import __version__ as telethon_version
 from telethon import TelegramClient
 
-from telegram_upload.files import get_file_attributes, get_file_thumb
+if StrictVersion(telethon_version) >= StrictVersion('1.0'):
+    import telethon.sync
+
 
 CAPTION_MAX_LENGTH = 200
 
