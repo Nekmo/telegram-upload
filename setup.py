@@ -1,115 +1,142 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-"""The setup script."""
+"""Upload files to Telegram up to 1.5 GiB using your account
+"""
+import copy
 import os
-import uuid
-import pip
-import sys
-
+import glob
+from itertools import chain
 from setuptools import setup, find_packages
-from distutils.version import LooseVersion
 
-if LooseVersion(pip.__version__) >= "10.0.0":
-    from pip._internal.req import parse_requirements
-else:
-    from pip.req import parse_requirements
+AUTHOR = "Nekmo"
+EMAIL = 'contacto@nekmo.com'
+URL = 'https://github.com/Nekmo/telegram-upload/'
 
+PACKAGE_NAME = 'telegram-upload'
+PACKAGE_DOWNLOAD_URL = 'https://github.com/Nekmo/telegram-upload/archive/master.zip'
+MODULE = 'telegram_upload'
+REQUIREMENT_FILE = 'requirements.txt'
+STATUS_LEVEL = 5  # 1:Planning 2:Pre-Alpha 3:Alpha 4:Beta 5:Production/Stable 6:Mature 7:Inactive
+KEYWORDS = ['telegram-upload']
+LICENSE = 'MIT license'
 
-__dir__ = os.path.abspath(os.path.dirname(__file__))
-scripts_path = os.path.join(__dir__, 'scripts')
+CLASSIFIERS = [  # https://github.com/github/choosealicense.com/tree/gh-pages/_licenses
+    'License :: OSI Approved :: MIT License',
+    # 'License :: OSI Approved :: BSD License',
+    # 'License :: OSI Approved :: ISC License (ISCL)',
+    # 'License :: OSI Approved :: Apache Software License',
+    # 'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+]  # https://pypi.python.org/pypi?%3Aaction=list_classifiers
+NATURAL_LANGUAGE = 'English'
 
-
-def get_url(ir):
-    if hasattr(ir, 'url'): return ir.url
-    if ir.link is None: return
-    return ir.link.url
-
-
-with open('README.rst') as readme_file:
-    readme = readme_file.read()
-
-with open('HISTORY.rst') as history_file:
-    history = history_file.read()
-
-
-# Requirements list
-requirements_path = os.path.join(__dir__, 'py{}-requirements.txt'.format(sys.version_info.major))
-if os.path.exists(requirements_path):
-    requirements = parse_requirements(requirements_path, session=uuid.uuid1())
-    install_requires = [str(ir.req) for ir in requirements if not get_url(ir)]
-    dependency_links = [get_url(ir) for ir in requirements if get_url(ir)]
-else:
-    install_requires = []
-    dependency_links = []
-
-
-setup_requirements = [
-    # TODO(Nekmo): put setup requirements (distutils extensions, etc.) here
+PLATFORMS = [
+    # 'universal',
+    'linux',
+    # 'macosx',
+    # 'solaris',
+    # 'irix',
+    # 'win'
+    # 'bsd'
+    # 'ios'
+    # 'android'
 ]
-
-test_requirements = [
-    # TODO: put package test requirements here
-]
-
-if os.path.exists(scripts_path):
-    scripts_dir_name = scripts_path.replace(__dir__, '', 1)
-    scripts_dir_name = scripts_dir_name[1:] if scripts_dir_name.startswith(os.sep) else scripts_dir_name
-    scripts = [os.path.join(scripts_dir_name, file) for file in os.listdir(scripts_path) if '.' not in file]
-else:
-    scripts = []
+PYTHON_VERSIONS = ['3.4-3.7']
 
 
-packages = find_packages(__dir__)
-# Prevent include symbolic links
-for package in tuple(packages):
-    path = os.path.join(__dir__, package.replace('.', '/'))
-    if not os.path.exists(path):
-        continue
-    if not os.path.islink(path):
-        continue
-    packages.remove(package)
+def read_requirement_file(path):
+    with open(path) as f:
+        return f.readlines()
 
 
+def get_package_version(module_name):
+    return __import__(module_name).__version__
+
+
+def get_packages(directory):
+    # Search modules and submodules to install (module, module.submodule, module.submodule2...)
+    packages_list = find_packages(directory)
+    # Prevent include symbolic links
+    for package in tuple(packages_list):
+        path = os.path.join(directory, package.replace('.', '/'))
+        if not os.path.exists(path) or os.path.islink(path):
+            packages_list.remove(package)
+    return packages_list
+
+
+def get_python_versions(string_range):
+    if '-' not in string_range:
+        return [string_range]
+    return ['{0:.1f}'.format(version * 0.1) for version
+            in range(*[int(x * 10) + (1 * i) for i, x in enumerate(map(float, string_range.split('-')))])]
+
+
+def get_python_classifiers(versions):
+    for version in range(2, 4):
+        if not next(iter(filter(lambda x: int(float(x)) != version, versions.copy())), False):
+            versions.add('{} :: Only'.format(version))
+            break
+    return ['Programming Language :: Python :: %s' % version for version in versions]
+
+
+def get_platform_classifiers(platform):
+    parts = {
+        'linux': ('POSIX', 'Linux'),
+        'win': ('Microsoft', 'Windows'),
+        'solaris': ('POSIX', 'SunOS/Solaris'),
+        'aix': ('POSIX', 'Linux'),
+        'unix': ('Unix',),
+        'bsd': ('POSIX', 'BSD')
+    }[platform]
+    return ['Operating System :: {}'.format(' :: '.join(parts[:i+1]))
+            for i in range(len(parts))]
+
+
+# paths
+here = os.path.abspath(os.path.dirname(__file__))
+readme = glob.glob('{}/{}*'.format(here, 'README'))[0]
+scripts = [os.path.join('scripts', os.path.basename(script)) for script in glob.glob('{}/scripts/*'.format(here))]
+
+# Package data
+packages = get_packages(here)
 modules = list(filter(lambda x: '.' not in x, packages))
+module = MODULE if MODULE else modules[0]
+python_versions = set(chain(*[get_python_versions(versions) for versions in PYTHON_VERSIONS])) - {2.8, 2.9}
+status_name = ['Planning', 'Pre-Alpha', 'Alpha', 'Beta',
+               'Production/Stable', 'Mature', 'Inactive'][STATUS_LEVEL - 1]
 
-package_version = __import__(modules[0]).__version__
+# Classifiers
+classifiers = copy.copy(CLASSIFIERS)
+classifiers.extend(get_python_classifiers(python_versions))
+classifiers.extend(chain(*[get_platform_classifiers(platform) for platform in PLATFORMS]))
+classifiers.extend([
+    'Natural Language :: {}'.format(NATURAL_LANGUAGE),
+    'Development Status :: {} - {}'.format(STATUS_LEVEL, status_name),
+])
 
 
 setup(
-    name='telegram-upload',
-    version=package_version,
-    description="Upload large files to Telegram using your account",
-    long_description=readme + '\n\n' + history,
-    author="Nekmo",
-    author_email='contacto@nekmo.com',
-    url='https://github.com/Nekmo/telegram_upload',
-    packages=find_packages(include=['telegram_upload']),
-    # entry_points={
-    #     'console_scripts': [
-    #         'telegram_upload=telegram_upload.management:main'
-    #     ]
-    # },
-    include_package_data=True,
-    install_requires=install_requires,
-    dependency_links=dependency_links,
-    license="MIT license",
-    zip_safe=False,
-    keywords='telegram_upload',
-    classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: MIT License',
-        'Natural Language :: English',
-        "Programming Language :: Python :: 2",
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-    ],
-    test_suite='tests',
-    tests_require=test_requirements,
-    setup_requires=setup_requirements,
+    name=PACKAGE_NAME,
+    version=get_package_version(module),
+    packages=packages,
+    provides=modules,
     scripts=scripts,
+    include_package_data=True,
+
+    description=__doc__,
+    long_description=open(readme, 'r').read(),
+    keywords=KEYWORDS,
+    download_url=PACKAGE_DOWNLOAD_URL,
+
+    author=AUTHOR,
+    author_email=EMAIL,
+    url=URL,
+
+    classifiers=classifiers,
+    platforms=PLATFORMS,
+
+    install_requires=read_requirement_file(REQUIREMENT_FILE),
+
+    # entry_points={},
+
+    zip_safe=False,
 )
