@@ -1,4 +1,6 @@
+import getpass
 import json
+import re
 from distutils.version import StrictVersion
 
 import click
@@ -14,10 +16,27 @@ if StrictVersion(telethon_version) >= StrictVersion('1.0'):
 CAPTION_MAX_LENGTH = 200
 
 
+def phone_match(value):
+    match = re.match(r'\+?[0-9.()\[\] \-]+', value)
+    if match is None:
+        raise ValueError('{} is not a valid phone'.format(value))
+    return value
+
+
 class Client(TelegramClient):
     def __init__(self, config_file, **kwargs):
         config = json.load(open(config_file))
         super().__init__(config.get('session', 'telegram-upload'), config['api_id'], config['api_hash'], **kwargs)
+
+    def start(
+            self,
+            phone=lambda: click.prompt('Please enter your phone', type=phone_match),
+            password=lambda: getpass.getpass('Please enter your password: '),
+            *,
+            bot_token=None, force_sms=False, code_callback=None,
+            first_name='New User', last_name='', max_attempts=3):
+        return super().start(phone=phone, password=password, bot_token=bot_token, force_sms=force_sms,
+                             first_name=first_name, last_name=last_name, max_attempts=max_attempts)
 
     def send_files(self, entity, files, delete_on_success=False):
         for file in files:
