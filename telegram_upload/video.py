@@ -33,5 +33,6 @@ def get_video_thumb(file, output=None, width=90):
         '-vframes', '1',
         output,
     ], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+    p.communicate()
     if not p.returncode and os.path.lexists(file):
         return output
