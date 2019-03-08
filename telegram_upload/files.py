@@ -17,7 +17,10 @@ def get_file_attributes(file):
     if mime == 'video':
         metadata = video_metadata(file)
         video_meta = metadata
-        meta_groups = metadata._MultipleMetadata__groups
+        meta_groups = None
+        if hasattr(metadata, '_MultipleMetadata__groups'):
+            # Is mkv
+            meta_groups = metadata._MultipleMetadata__groups
         if not metadata.has('width') and meta_groups:
             video_meta = meta_groups[next(filter(lambda x: x.startswith('video'), meta_groups._key_list))]
         attrs.append(DocumentAttributeStreamVideo(
