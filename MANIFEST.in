@@ -6,6 +6,7 @@ include README.rst
 include common-requirements.txt
 include py2-requirements.txt
 include py3-requirements.txt
+include requirements.txt
 
 recursive-include tests *
 recursive-exclude * __pycache__
