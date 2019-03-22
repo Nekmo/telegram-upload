@@ -26,11 +26,14 @@ def video_metadata(file):
 def get_video_thumb(file, output=None, width=90):
     output = output or tempfile.NamedTemporaryFile(suffix='.jpg').name
     metadata = video_metadata(file)
+    duration = metadata.get('duration').seconds if metadata.has('duration') else 0
     p = subprocess.Popen([
-        'ffmpeg', '-i', file,
-        '-ss', str(int((0, metadata.get('duration').seconds)[metadata.has('duration')] / 2)),
-        '-filter:v', 'scale={}:-1'.format(width),
-        '-vframes', '1',
+        'ffmpeg',
+        '-ss', str(int(duration / 2)),
+        '-i', file,
+        '-filter:v',
+        'scale={}:-1'.format(width),
+        '-vframes:v', '1',
         output,
     ], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
     p.communicate()
