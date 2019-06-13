@@ -2,9 +2,13 @@ import getpass
 import json
 import re
 from distutils.version import StrictVersion
+from typing import Iterable
 
 import click
 import os
+
+from telethon.tl.types import Message, DocumentAttributeFilename
+
 from telegram_upload.files import get_file_attributes, get_file_thumb
 from telethon.version import __version__ as telethon_version
 from telethon import TelegramClient
@@ -23,6 +27,14 @@ def phone_match(value):
     return value
 
 
+def get_progress_bar(action, file, length):
+    bar = click.progressbar(label='{} {}'.format(action, file), length=length)
+
+    def progress(current, total):
+        bar.pos = 0
+        bar.update(current)
+    return progress
+
 class Client(TelegramClient):
     def __init__(self, config_file, **kwargs):
         config = json.load(open(config_file))
@@ -40,13 +52,7 @@ class Client(TelegramClient):
 
     def send_files(self, entity, files, delete_on_success=False):
         for file in files:
-            bar = click.progressbar(label='Uploading {}'.format(os.path.basename(file)),
-                                    length=os.path.getsize(file))
-
-            def progress(current, total):
-                bar.pos = 0
-                bar.update(current)
-
+            progress = get_progress_bar('Uploading', os.path.basename(file), os.path.getsize(file))
             name = '.'.join(os.path.basename(file).split('.')[:-1])
             thumb = get_file_thumb(file)
             try:
@@ -63,5 +69,17 @@ class Client(TelegramClient):
                 click.echo('Deleting {}'.format(file))
                 os.remove(file)
 
-    def find_files(self):
-        pass
+    def find_files(self, entity):
+        for message in self.iter_messages(entity):
+            if message.document:
+                yield message
+            else:
+                break
+
+    def download_files(self, messages: Iterable[Message]):
+        for message in messages:
+            filename_attr = next(filter(lambda x: isinstance(x, DocumentAttributeFilename),
+                                        message.document.attributes), None)
+            filename = filename_attr.file_name if filename_attr else 'Unknown'
+            progress = get_progress_bar('Downloading', filename, message.document.size)
+            self.download_media(message, progress_callback=progress)
