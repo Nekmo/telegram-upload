@@ -12,7 +12,7 @@ from telegram_upload.config import default_config
 @click.option('--to', default='me')
 @click.option('--config', default=None)
 @click.option('-d', '--delete-on-success', is_flag=True)
-def manage(files, to, config, delete_on_success):
+def upload(files, to, config, delete_on_success):
     client = Client(config or default_config())
     client.start()
     client.send_files(to, files, delete_on_success)
