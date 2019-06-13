@@ -16,3 +16,13 @@ def upload(files, to, config, delete_on_success):
     client = Client(config or default_config())
     client.start()
     client.send_files(to, files, delete_on_success)
+
+
+@click.command()
+@click.option('--from', default='me')
+@click.option('--config', default=None)
+@click.option('-d', '--delete-on-success', is_flag=True)
+def download(from_, config, delete_on_success):
+    client = Client(config or default_config())
+    client.start()
+    client.find_files()

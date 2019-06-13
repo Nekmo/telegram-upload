@@ -62,3 +62,6 @@ class Client(TelegramClient):
             if delete_on_success:
                 click.echo('Deleting {}'.format(file))
                 os.remove(file)
+
+    def find_files(self):
+        pass
