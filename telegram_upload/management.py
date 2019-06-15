@@ -26,4 +26,5 @@ def download(from_, config, delete_on_success):
     client = Client(config or default_config())
     client.start()
     messages = client.find_files(from_)
-    client.download_files(messages)
+    client.download_files(from_, messages, delete_on_success)
+

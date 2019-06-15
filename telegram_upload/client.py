@@ -76,10 +76,13 @@ class Client(TelegramClient):
             else:
                 break
 
-    def download_files(self, messages: Iterable[Message]):
+    def download_files(self, entity, messages: Iterable[Message], delete_on_success: bool = False):
         for message in messages:
             filename_attr = next(filter(lambda x: isinstance(x, DocumentAttributeFilename),
                                         message.document.attributes), None)
             filename = filename_attr.file_name if filename_attr else 'Unknown'
             progress = get_progress_bar('Downloading', filename, message.document.size)
             self.download_media(message, progress_callback=progress)
+            if delete_on_success:
+                self.delete_messages(entity, [message])
+            print()
