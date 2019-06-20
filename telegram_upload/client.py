@@ -77,6 +77,7 @@ class Client(TelegramClient):
                 break
 
     def download_files(self, entity, messages: Iterable[Message], delete_on_success: bool = False):
+        messages = reversed(list(messages))
         for message in messages:
             filename_attr = next(filter(lambda x: isinstance(x, DocumentAttributeFilename),
                                         message.document.attributes), None)
