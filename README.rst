@@ -48,7 +48,7 @@ This is the preferred method to install telegram-upload, as it will always insta
 
 To use this program you need an Telegram account and your *App api_id/api_hash* (get it in
 `my.telegram.org <https://my.telegram.org/>`_). The first time you use telegram-upload it requests your telephone,
-api_id and api_hash. To **send files**:
+api_id and api_hash. Bot tokens can not be used with this program (bot uploads are limited to 50MB). To **send files**:
 
 .. code-block:: console
 
