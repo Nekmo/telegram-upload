@@ -54,6 +54,9 @@ api_id and api_hash. To **send files**:
 
     $ telegram-upload file1.mp4 /path/to/file2.mkv
 
+Credentials are saved in ``~/.config/telegram-upload.json`` and ``telegram-upload.session`` (in the current
+directory). You must make sure that these files are secured. You can copy these files to authenticate
+``telegram-upload`` on more machines, but it is advisable to create a session file for each machine.
 
 Features
 ========
