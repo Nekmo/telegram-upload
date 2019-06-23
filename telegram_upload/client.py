@@ -8,6 +8,7 @@ import click
 import os
 
 from telethon.tl.types import Message, DocumentAttributeFilename
+from telethon.utils import pack_bot_file_id
 
 from telegram_upload.files import get_file_attributes, get_file_thumb
 from telethon.version import __version__ as telethon_version
@@ -35,6 +36,7 @@ def get_progress_bar(action, file, length):
         bar.update(current)
     return progress
 
+
 class Client(TelegramClient):
     def __init__(self, config_file, **kwargs):
         config = json.load(open(config_file))
@@ -50,21 +52,25 @@ class Client(TelegramClient):
         return super().start(phone=phone, password=password, bot_token=bot_token, force_sms=force_sms,
                              first_name=first_name, last_name=last_name, max_attempts=max_attempts)
 
-    def send_files(self, entity, files, delete_on_success=False):
+    def send_files(self, entity, files, delete_on_success=False, print_file_id=False):
         for file in files:
             progress = get_progress_bar('Uploading', os.path.basename(file), os.path.getsize(file))
             name = '.'.join(os.path.basename(file).split('.')[:-1])
             thumb = get_file_thumb(file)
+            caption = (name[:CAPTION_MAX_LENGTH] + '..') if len(name) > CAPTION_MAX_LENGTH else name
             try:
-                self.send_file(entity, file, thumb=thumb,
-                               caption=(name[:CAPTION_MAX_LENGTH] + '..') if len(name) > CAPTION_MAX_LENGTH else name,
-                               progress_callback=progress, attributes=get_file_attributes(file))
+                attributes = get_file_attributes(file)
+                message = self.send_file(entity, file, thumb=thumb,
+                                         caption=caption,
+                                         progress_callback=progress, attributes=attributes)
             except Exception:
                 raise
             finally:
                 if thumb:
                     os.remove(thumb)
             click.echo()
+            if print_file_id:
+                click.echo('Uploaded successfully "{}" (file_id {})'.format(file, pack_bot_file_id(message.media)))
             if delete_on_success:
                 click.echo('Deleting {}'.format(file))
                 os.remove(file)
