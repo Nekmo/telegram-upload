@@ -17,7 +17,7 @@
   :target: https://pypi.org/project/telegram-upload/
   :alt: Python versions
 
-.. image:: https://img.shields.io/codeclimate/github/Nekmo/telegram-upload.svg?style=flat-square
+.. image:: https://img.shields.io/codeclimate/maintainability/Nekmo/telegram-upload.svg?style=flat-square
   :target: https://codeclimate.com/github/Nekmo/telegram-upload
   :alt: Code Climate
 
