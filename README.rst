@@ -35,7 +35,7 @@ telegram-upload
 ###############
 
 
-Upload large files to Telegram using your account
+Upload (and download) large files to Telegram using your account
 
 
 To **install telegram-upload**, run this command in your terminal:
