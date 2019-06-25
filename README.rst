@@ -58,10 +58,22 @@ Credentials are saved in ``~/.config/telegram-upload.json`` and ``telegram-uploa
 directory). You must make sure that these files are secured. You can copy these files to authenticate
 ``telegram-upload`` on more machines, but it is advisable to create a session file for each machine.
 
+You can download the files again from your saved messages (by default) or from a channel. All files will be
+downloaded until the last text message.
+
+.. code-block:: console
+
+    $ telegram-download
+
+The ``--delete-on-success`` option allows you to delete the Telegram message after downloading the file. This is
+useful to send files to download to your saved messages and avoid downloading them again. You can use this option to
+download files on your computer away from home.
+
+
 Features
 ========
 
-* Send multiples files (up to 1.5GiB per file)
-* Add video thumbs
-* Delete local file on success
-
+* Upload multiples files (up to 1.5GiB per file)
+* Download files.
+* Add video thumbs.
+* Delete local or remote file on success.
