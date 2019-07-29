@@ -1,4 +1,4 @@
 telethon
 click>=6.0
 cryptg
-hachoir3
+hachoir
