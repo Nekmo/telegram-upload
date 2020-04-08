@@ -10,6 +10,7 @@ import os
 from telethon.tl.types import Message, DocumentAttributeFilename
 from telethon.utils import pack_bot_file_id
 
+from telegram_upload.exceptions import ThumbError
 from telegram_upload.files import get_file_attributes, get_file_thumb
 from telethon.version import __version__ as telethon_version
 from telethon import TelegramClient
@@ -56,7 +57,11 @@ class Client(TelegramClient):
         for file in files:
             progress = get_progress_bar('Uploading', os.path.basename(file), os.path.getsize(file))
             name = '.'.join(os.path.basename(file).split('.')[:-1])
-            thumb = get_file_thumb(file)
+            thumb = None
+            try:
+                thumb = get_file_thumb(file)
+            except ThumbError as e:
+                click.echo('{}'.format(e), err=True)
             caption = (name[:CAPTION_MAX_LENGTH] + '..') if len(name) > CAPTION_MAX_LENGTH else name
             try:
                 attributes = get_file_attributes(file)

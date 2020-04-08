@@ -4,6 +4,14 @@
 import sys
 
 
+class ThumbError(Exception):
+    pass
+
+
+class ThumbVideoError(ThumbError):
+    pass
+
+
 class TelegramUploadError(Exception):
     body = ''
 
