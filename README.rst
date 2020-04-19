@@ -33,22 +33,24 @@
 ###############
 telegram-upload
 ###############
-
-
-Upload (and download) large files to Telegram using your account
+Telegram-upload uses your personal Telegram account to upload and download files up to 1.5GiB (bots are limited to 50
+MiB). Turn Telegram into your personal cloud!
 
 
 To **install telegram-upload**, run this command in your terminal:
 
 .. code-block:: console
 
-    $ sudo pip install telegram-upload
+    $ sudo pip3 install -U telegram-upload
 
 This is the preferred method to install telegram-upload, as it will always install the most recent stable release.
+`More info in the documentation <https://docs.nekmo.org/telegram-upload/installation.html>`_
+
 
 To use this program you need an Telegram account and your *App api_id/api_hash* (get it in
 `my.telegram.org <https://my.telegram.org/>`_). The first time you use telegram-upload it requests your telephone,
-api_id and api_hash. Bot tokens can not be used with this program (bot uploads are limited to 50MB). To **send files**:
+api_id and api_hash. Bot tokens can not be used with this program (bot uploads are limited to 50MB). To **send files**
+(by default it is uploaded to saved messages):
 
 .. code-block:: console
 
@@ -57,6 +59,9 @@ api_id and api_hash. Bot tokens can not be used with this program (bot uploads a
 Credentials are saved in ``~/.config/telegram-upload.json`` and ``telegram-upload.session`` (in the current
 directory). You must make sure that these files are secured. You can copy these files to authenticate
 ``telegram-upload`` on more machines, but it is advisable to create a session file for each machine.
+Upload options are available
+`in the documentation <https://docs.nekmo.org/telegram-upload/usage.html#telegram-upload>`_.
+
 
 You can download the files again from your saved messages (by default) or from a channel. All files will be
 downloaded until the last text message.
@@ -68,6 +73,7 @@ downloaded until the last text message.
 The ``--delete-on-success`` option allows you to delete the Telegram message after downloading the file. This is
 useful to send files to download to your saved messages and avoid downloading them again. You can use this option to
 download files on your computer away from home.
+`Read the documentation <https://docs.nekmo.org/telegram-upload/usage.html#telegram-download>`_ for more info.
 
 
 Features
