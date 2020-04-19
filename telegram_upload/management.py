@@ -24,10 +24,17 @@ def upload(files, to, config, delete_on_success, print_file_id):
 
 
 @click.command()
-@click.option('--from', '-f', 'from_', default='me')
-@click.option('--config', default=None)
-@click.option('-d', '--delete-on-success', is_flag=True)
+@click.option('--from', '-f', 'from_', default='me',
+              help='Phone number, username, chat id or "me" (saved messages). By default "me".')
+@click.option('--config', default=None, help='Configuration file to use. By default "{}".'.format(CONFIG_FILE))
+@click.option('-d', '--delete-on-success', is_flag=True,
+              help='Delete telegram message after successful download. Useful for creating a download queue.')
 def download(from_, config, delete_on_success):
+    """Download all the latest messages that are files in a chatt, by default download
+    from "saved messages". It is recommended to forward the files to download to
+    "saved messages" and use parameter ``--delete-on-success``. Forwarded messages will
+    be removed from the chat after downloading, such as a download queue.
+    """
     client = Client(config or default_config())
     client.start()
     messages = client.find_files(from_)

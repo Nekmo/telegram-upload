@@ -5,6 +5,7 @@ Telegram Upload documentation
    :maxdepth: 2
    :glob:
 
+   installation
    readme
 
 ..

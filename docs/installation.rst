@@ -34,6 +34,6 @@ For versions that are not in Pypi (it is a development version)::
     $ pip install git+https://github.com/Nekmo/telegram-upload.git@<branch>#egg=telegram_upload
 
 
-If you do not have git installed:
+If you do not have git installed::
 
     $ pip install https://github.com/Nekmo/telegram-upload/archive/<branch>.zip
