@@ -28,7 +28,7 @@ import os
 # version is used.
 directory = os.path.dirname(os.path.abspath(__file__))
 
-# sys.path.append(os.path.abspath(os.path.join(directory, '../')))
+sys.path.append(os.path.abspath(os.path.join(directory, '../')))
 # os.environ['DJANGO_SETTINGS_MODULE'] = 'Telegram Upload.settings.develop'
 # django.setup()
 
@@ -42,6 +42,7 @@ directory = os.path.dirname(os.path.abspath(__file__))
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.intersphinx',
+    'sphinx_click.ext'
     # 'sphinxcontrib.autohttp.drf',
     # 'sphinxcontrib_django',
 ]
