@@ -7,6 +7,8 @@ SPHINXBUILD   = sphinx-build
 SPHINXAPIDOC  = sphinx-apidoc
 PAPER         =
 BUILDDIR      = _build
+PROJECT_NAME  = Telegram Upload
+DRIVE_FOLDER  = 
 
 # User-friendly check for sphinx-build
 ifeq ($(shell which $(SPHINXBUILD) >/dev/null 2>&1; echo $$?), 1)
@@ -24,6 +26,7 @@ I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
+	@echo "  pdf       to make standalone PDF files"
 	@echo "  html       to make standalone HTML files"
 	@echo "  watch      Browser Sync watcher for build HTML files on real time"
 	@echo "  dirhtml    to make HTML files named index.html in directories"
@@ -51,16 +54,25 @@ help:
 clean:
 	rm -rf $(BUILDDIR)/*
 
-html:
-	$(SPHINXAPIDOC) -o . ../telegram_upload
-	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+rinohpdf:
+	$(SPHINXAPIDOC) -o . ../
+	$(SPHINXBUILD) -b rinoh . $(BUILDDIR)/pdf
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
-watch:
-	gulp watch
+pdf:
+	HTML_THEME=business_theme make singlehtml
+	weasyprint _build/singlehtml/index.html "$(PROJECT_NAME).pdf"
+	rm -rf _build
+	python -m business_theme upload "$(PROJECT_NAME).pdf" "$(PROJECT_NAME).pdf" "$(DRIVE_FOLDER)"
 	@echo
-	@echo "Finished."
+	@echo "Build finished. The PDF file is in $(BUILDDIR)/."
+
+html:
+	$(SPHINXAPIDOC) -o . ../
+	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+	@echo
+	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
 dirhtml:
 	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml
@@ -68,6 +80,7 @@ dirhtml:
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/dirhtml."
 
 singlehtml:
+	$(SPHINXAPIDOC) -o . ../
 	$(SPHINXBUILD) -b singlehtml $(ALLSPHINXOPTS) $(BUILDDIR)/singlehtml
 	@echo
 	@echo "Build finished. The HTML page is in $(BUILDDIR)/singlehtml."
@@ -93,17 +106,17 @@ qthelp:
 	@echo
 	@echo "Build finished; now you can run "qcollectiongenerator" with the" \
 	      ".qhcp project file in $(BUILDDIR)/qthelp, like this:"
-	@echo "# qcollectiongenerator $(BUILDDIR)/qthelp/telegram_upload.qhcp"
+	@echo "# qcollectiongenerator $(BUILDDIR)/qthelp/delfos.qhcp"
 	@echo "To view the help file:"
-	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/telegram_upload.qhc"
+	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/delfos.qhc"
 
 devhelp:
 	$(SPHINXBUILD) -b devhelp $(ALLSPHINXOPTS) $(BUILDDIR)/devhelp
 	@echo
 	@echo "Build finished."
 	@echo "To view the help file:"
-	@echo "# mkdir -p $$HOME/.local/share/devhelp/telegram_upload"
-	@echo "# ln -s $(BUILDDIR)/devhelp $$HOME/.local/share/devhelp/telegram_upload"
+	@echo "# mkdir -p $$HOME/.local/share/devhelp/delfos"
+	@echo "# ln -s $(BUILDDIR)/devhelp $$HOME/.local/share/devhelp/delfos"
 	@echo "# devhelp"
 
 epub:

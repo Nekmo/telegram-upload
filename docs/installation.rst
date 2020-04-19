@@ -8,11 +8,11 @@ Installation
 Stable release
 --------------
 
-To install telegram-upload, run this command in your terminal:
+To install telegram-upload, run these commands in your terminal:
 
 .. code-block:: console
 
-    $ pip install telegram_upload
+    $ sudo pip3 install -U telegram-upload
 
 This is the preferred method to install telegram-upload, as it will always install the most recent stable release.
 
@@ -31,34 +31,9 @@ You can install other versions from Pypi using::
 
 For versions that are not in Pypi (it is a development version)::
 
-    $ pip install git+https://github.com/Nekmo/telegram-upload@<branch>#egg=telegram-upload
+    $ pip install git+https://github.com/Nekmo/telegram-upload.git@<branch>#egg=telegram_upload
 
 
+If you do not have git installed:
 
-
-From sources
-------------
-
-The sources for telegram-upload can be downloaded from the `Github repo`_.
-
-You can either clone the public repository:
-
-.. code-block:: console
-
-    $ git clone git://github.com/Nekmo/telegram-upload
-
-Or download the `tarball`_:
-
-.. code-block:: console
-
-    $ curl  -OL https://github.com/Nekmo/telegram-upload/tarball/master
-
-Once you have a copy of the source, you can install it with:
-
-.. code-block:: console
-
-    $ python setup.py install
-
-
-.. _Github repo: https://github.com/Nekmo/telegram-upload
-.. _tarball: https://github.com/Nekmo/telegram-upload/tarball/master
+    $ pip install https://github.com/Nekmo/telegram-upload/archive/<branch>.zip
