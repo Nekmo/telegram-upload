@@ -21,6 +21,9 @@ Contents
    installation
    readme
    usage
+   contributing
+   authors
+   history
 
 ..
    _ modules
