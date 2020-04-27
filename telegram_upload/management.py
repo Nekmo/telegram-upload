@@ -13,14 +13,16 @@ from telegram_upload.config import default_config, CONFIG_FILE
 @click.option('--config', default=None, help='Configuration file to use. By default "{}".'.format(CONFIG_FILE))
 @click.option('-d', '--delete-on-success', is_flag=True, help='Delete local file after successful upload.')
 @click.option('--print-file-id', is_flag=True, help='Print the id of the uploaded file after the upload.')
-def upload(files, to, config, delete_on_success, print_file_id):
+@click.option('--force-file', is_flag=True, help='Force send as a file. The filename will be preserved '
+                                                 'but the preview will not be available.')
+def upload(files, to, config, delete_on_success, print_file_id, force_file):
     """Upload one or more files to Telegram using your personal account.
     The maximum file size is 1.5 GiB and by default they will be saved in
     your saved messages.
     """
     client = Client(config or default_config())
     client.start()
-    client.send_files(to, files, delete_on_success, print_file_id)
+    client.send_files(to, files, delete_on_success, print_file_id, force_file)
 
 
 @click.command()

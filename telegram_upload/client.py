@@ -53,7 +53,8 @@ class Client(TelegramClient):
         return super().start(phone=phone, password=password, bot_token=bot_token, force_sms=force_sms,
                              first_name=first_name, last_name=last_name, max_attempts=max_attempts)
 
-    def send_files(self, entity, files, delete_on_success=False, print_file_id=False):
+    def send_files(self, entity, files, delete_on_success=False, print_file_id=False,
+                   force_file=False):
         for file in files:
             progress = get_progress_bar('Uploading', os.path.basename(file), os.path.getsize(file))
             name = '.'.join(os.path.basename(file).split('.')[:-1])
@@ -64,9 +65,12 @@ class Client(TelegramClient):
                 click.echo('{}'.format(e), err=True)
             caption = (name[:CAPTION_MAX_LENGTH] + '..') if len(name) > CAPTION_MAX_LENGTH else name
             try:
-                attributes = get_file_attributes(file)
+                if force_file:
+                    attributes = [DocumentAttributeFilename(file)]
+                else:
+                    attributes = get_file_attributes(file)
                 message = self.send_file(entity, file, thumb=thumb,
-                                         caption=caption,
+                                         caption=caption, force_document=force_file,
                                          progress_callback=progress, attributes=attributes)
             except Exception:
                 raise
