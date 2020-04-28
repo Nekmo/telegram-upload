@@ -136,7 +136,12 @@ setup(
 
     install_requires=read_requirement_file(REQUIREMENT_FILE),
 
-    # entry_points={},
+    entry_points={
+        "console_scripts": [
+            "telegram-upload = telegram_upload.management:upload_cli",
+            "telegram-download = telegram_upload.management:download_cli",
+        ],
+    },
 
     zip_safe=False,
 )

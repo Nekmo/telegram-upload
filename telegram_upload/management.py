@@ -5,6 +5,7 @@ import click
 
 from telegram_upload.client import Client
 from telegram_upload.config import default_config, CONFIG_FILE
+from telegram_upload.exceptions import catch
 
 
 @click.command()
@@ -43,3 +44,7 @@ def download(from_, config, delete_on_success):
     client.start()
     messages = client.find_files(from_)
     client.download_files(from_, messages, delete_on_success)
+
+
+upload_cli = catch(upload)
+download_cli = catch(download)
