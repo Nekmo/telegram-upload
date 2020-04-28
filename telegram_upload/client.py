@@ -54,7 +54,7 @@ class Client(TelegramClient):
                              first_name=first_name, last_name=last_name, max_attempts=max_attempts)
 
     def send_files(self, entity, files, delete_on_success=False, print_file_id=False,
-                   force_file=False):
+                   force_file=False, forward=()):
         for file in files:
             progress = get_progress_bar('Uploading', os.path.basename(file), os.path.getsize(file))
             name = '.'.join(os.path.basename(file).split('.')[:-1])
@@ -83,6 +83,7 @@ class Client(TelegramClient):
             if delete_on_success:
                 click.echo('Deleting {}'.format(file))
                 os.remove(file)
+            self.forward_to(message, forward)
 
     def find_files(self, entity):
         for message in self.iter_messages(entity):
@@ -102,3 +103,7 @@ class Client(TelegramClient):
             if delete_on_success:
                 self.delete_messages(entity, [message])
             print()
+
+    def forward_to(self, message, destinations):
+        for destination in destinations:
+            self.forward_messages(destination, [message])
