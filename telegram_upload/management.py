@@ -49,3 +49,12 @@ def download(from_, config, delete_on_success):
 
 upload_cli = catch(upload)
 download_cli = catch(download)
+
+
+if __name__ == '__main__':
+    import sys
+    import re
+    sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
+    fn = {'upload': upload_cli, 'download': download_cli}[sys.argv[1]]
+    sys.argv = [sys.argv[0]] + sys.argv[2:]
+    sys.exit(fn())
