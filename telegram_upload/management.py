@@ -18,14 +18,15 @@ from telegram_upload.exceptions import catch
                                                  'but the preview will not be available.')
 @click.option('-f', '--forward', multiple=True, help='Forward the file to a chat (alias or id) or user (username, '
                                                      'mobile or id). This option can be used multiple times.')
-def upload(files, to, config, delete_on_success, print_file_id, force_file, forward):
+@click.option('--caption', type=str, help='Change file description. By default the file name.')
+def upload(files, to, config, delete_on_success, print_file_id, force_file, forward, caption):
     """Upload one or more files to Telegram using your personal account.
     The maximum file size is 1.5 GiB and by default they will be saved in
     your saved messages.
     """
     client = Client(config or default_config())
     client.start()
-    client.send_files(to, files, delete_on_success, print_file_id, force_file, forward)
+    client.send_files(to, files, delete_on_success, print_file_id, force_file, forward, caption)
 
 
 @click.command()
