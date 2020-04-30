@@ -10,10 +10,12 @@ import os
 from telethon.tl.types import Message, DocumentAttributeFilename
 from telethon.utils import pack_bot_file_id
 
-from telegram_upload.exceptions import ThumbError
+from telegram_upload.exceptions import ThumbError, TelegramUploadNoSpaceError
 from telegram_upload.files import get_file_attributes, get_file_thumb
 from telethon.version import __version__ as telethon_version
 from telethon import TelegramClient
+
+from telegram_upload.utils import free_disk_usage, sizeof_fmt
 
 if StrictVersion(telethon_version) >= StrictVersion('1.0'):
     import telethon.sync
@@ -99,6 +101,12 @@ class Client(TelegramClient):
             filename_attr = next(filter(lambda x: isinstance(x, DocumentAttributeFilename),
                                         message.document.attributes), None)
             filename = filename_attr.file_name if filename_attr else 'Unknown'
+            if message.document.size > free_disk_usage():
+                raise TelegramUploadNoSpaceError(
+                    'There is no disk space to download "{}". Space required: {}'.format(
+                        filename, sizeof_fmt(message.document.size - free_disk_usage())
+                    )
+                )
             progress = get_progress_bar('Downloading', filename, message.document.size)
             self.download_media(message, progress_callback=progress)
             if delete_on_success:
