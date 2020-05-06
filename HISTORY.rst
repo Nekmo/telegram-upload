@@ -2,6 +2,17 @@
 History
 =======
 
+0.3.0 (2020-05-07)
+------------------
+
+* Issue #2: Upload directories
+* Issue #30: Check available disk space in download file
+* Issue #33: edit file name
+* Issue #24: How to install and use in windows?
+* Issue #29: Option to forward uploaded file enhancement
+* Issue #20: Can't upload video as Document.
+* Issue #12: Docs
+
 0.2.1 (2019-07-30)
 ------------------
 
