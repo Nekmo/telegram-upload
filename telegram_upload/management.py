@@ -6,6 +6,12 @@ import click
 from telegram_upload.client import Client
 from telegram_upload.config import default_config, CONFIG_FILE
 from telegram_upload.exceptions import catch
+from telegram_upload.files import NoDirectoriesFiles, RecursiveFiles
+
+DIRECTORY_MODES = {
+    'fail': NoDirectoriesFiles,
+    'recursive': RecursiveFiles,
+}
 
 
 @click.command()
@@ -18,14 +24,20 @@ from telegram_upload.exceptions import catch
                                                  'but the preview will not be available.')
 @click.option('-f', '--forward', multiple=True, help='Forward the file to a chat (alias or id) or user (username, '
                                                      'mobile or id). This option can be used multiple times.')
+@click.option('--directories', default='fail', type=click.Choice(list(DIRECTORY_MODES.keys())),
+              help='Action to take with the folders. By default an error is caused.')
 @click.option('--caption', type=str, help='Change file description. By default the file name.')
-def upload(files, to, config, delete_on_success, print_file_id, force_file, forward, caption):
+def upload(files, to, config, delete_on_success, print_file_id, force_file, forward, caption, directories):
     """Upload one or more files to Telegram using your personal account.
     The maximum file size is 1.5 GiB and by default they will be saved in
     your saved messages.
     """
     client = Client(config or default_config())
     client.start()
+    files = DIRECTORY_MODES[directories](files)
+    if directories == 'fail':
+        # Validate now
+        files = list(files)
     client.send_files(to, files, delete_on_success, print_file_id, force_file, forward, caption)
 
 

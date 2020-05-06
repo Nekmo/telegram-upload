@@ -3,6 +3,7 @@ import os
 
 import mimetypes
 
+from telegram_upload.exceptions import TelegramInvalidFile
 from telegram_upload.video import DocumentAttributeStreamVideo, get_video_thumb, video_metadata
 from telegram_upload._compat import scandir
 
@@ -71,6 +72,8 @@ class NoDirectoriesFiles(FilesBase):
     def get_iterator(self):
         for file in self.files:
             if os.path.isdir(file):
-                raise ValueError('"{}" is a directory.'.format(file))
+                raise TelegramInvalidFile('"{}" is a directory.'.format(file))
             else:
                 yield file
+
+

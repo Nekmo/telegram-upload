@@ -28,6 +28,10 @@ class TelegramUploadError(Exception):
         return msg
 
 
+class TelegramInvalidFile(TelegramUploadError):
+    error_code = 3
+
+
 class TelegramUploadNoSpaceError(TelegramUploadError):
     error_code = 28
 
