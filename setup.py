@@ -122,7 +122,7 @@ setup(
     scripts=scripts,
     include_package_data=True,
 
-    description=__doc__,
+    description=__doc__.replace('\n', ' '),
     long_description=open(readme, 'r').read(),
     keywords=KEYWORDS,
     download_url=PACKAGE_DOWNLOAD_URL,
