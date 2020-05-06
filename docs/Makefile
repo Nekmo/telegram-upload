@@ -8,7 +8,7 @@ SPHINXAPIDOC  = sphinx-apidoc
 PAPER         =
 BUILDDIR      = _build
 PROJECT_NAME  = Telegram Upload
-DRIVE_FOLDER  = 
+DRIVE_FOLDER  =
 
 # User-friendly check for sphinx-build
 ifeq ($(shell which $(SPHINXBUILD) >/dev/null 2>&1; echo $$?), 1)
@@ -69,7 +69,7 @@ pdf:
 	@echo "Build finished. The PDF file is in $(BUILDDIR)/."
 
 html:
-	$(SPHINXAPIDOC) -o . ../
+	rm -rf $(BUILDDIR)
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
