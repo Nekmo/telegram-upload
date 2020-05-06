@@ -1,8 +1,10 @@
-from hachoir.metadata import extractMetadata
-from hachoir.parser import createParser
+import os
+
+
 import mimetypes
 
 from telegram_upload.video import DocumentAttributeStreamVideo, get_video_thumb, video_metadata
+from telegram_upload._compat import scandir
 
 mimetypes.init()
 
@@ -34,3 +36,26 @@ def get_file_attributes(file):
 def get_file_thumb(file):
     if get_file_mime(file) == 'video':
         return get_video_thumb(file)
+
+
+class RecursiveFiles:
+    def __init__(self, files):
+        self._iterator = None
+        self.files = files
+
+    def get_iterator(self):
+        for file in self.files:
+            if os.path.isdir(file):
+                yield from map(lambda file: file.path,
+                               filter(lambda x: not x.is_dir(), scandir(file)))
+            else:
+                yield file
+
+    def __iter__(self):
+        self._iterator = self.get_iterator()
+        return self
+
+    def __next__(self):
+        if self._iterator is None:
+            self._iterator = self.get_iterator()
+        return next(self._iterator)

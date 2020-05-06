@@ -5,7 +5,6 @@ import subprocess
 import tempfile
 import os
 
-import click
 from hachoir.metadata import extractMetadata
 from hachoir.parser import createParser
 from telethon.tl.types import DocumentAttributeVideo
