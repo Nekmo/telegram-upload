@@ -38,18 +38,13 @@ def get_file_thumb(file):
         return get_video_thumb(file)
 
 
-class RecursiveFiles:
+class FilesBase:
     def __init__(self, files):
         self._iterator = None
         self.files = files
 
     def get_iterator(self):
-        for file in self.files:
-            if os.path.isdir(file):
-                yield from map(lambda file: file.path,
-                               filter(lambda x: not x.is_dir(), scandir(file)))
-            else:
-                yield file
+        raise NotImplementedError
 
     def __iter__(self):
         self._iterator = self.get_iterator()
@@ -59,3 +54,23 @@ class RecursiveFiles:
         if self._iterator is None:
             self._iterator = self.get_iterator()
         return next(self._iterator)
+
+
+class RecursiveFiles(FilesBase):
+
+    def get_iterator(self):
+        for file in self.files:
+            if os.path.isdir(file):
+                yield from map(lambda file: file.path,
+                               filter(lambda x: not x.is_dir(), scandir(file)))
+            else:
+                yield file
+
+
+class NoDirectoriesFiles(FilesBase):
+    def get_iterator(self):
+        for file in self.files:
+            if os.path.isdir(file):
+                raise ValueError('"{}" is a directory.'.format(file))
+            else:
+                yield file
