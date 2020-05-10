@@ -4,8 +4,8 @@ import os
 import mimetypes
 
 from telegram_upload.exceptions import TelegramInvalidFile
+from telegram_upload.utils import scantree
 from telegram_upload.video import DocumentAttributeStreamVideo, get_video_thumb, video_metadata
-from telegram_upload._compat import scandir
 
 mimetypes.init()
 
@@ -63,7 +63,7 @@ class RecursiveFiles(FilesBase):
         for file in self.files:
             if os.path.isdir(file):
                 yield from map(lambda file: file.path,
-                               filter(lambda x: not x.is_dir(), scandir(file)))
+                               filter(lambda x: not x.is_dir(), scantree(file, True)))
             else:
                 yield file
 
