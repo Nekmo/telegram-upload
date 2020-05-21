@@ -16,7 +16,8 @@ DIRECTORY_MODES = {
 
 @click.command()
 @click.argument('files', nargs=-1)
-@click.option('--to', default='me', help='Phone number, username, chat id or "me" (saved messages). By default "me".')
+@click.option('--to', default='me', help='Phone number, username, invite link or "me" (saved messages). '
+                                         'By default "me".')
 @click.option('--config', default=None, help='Configuration file to use. By default "{}".'.format(CONFIG_FILE))
 @click.option('-d', '--delete-on-success', is_flag=True, help='Delete local file after successful upload.')
 @click.option('--print-file-id', is_flag=True, help='Print the id of the uploaded file after the upload.')
