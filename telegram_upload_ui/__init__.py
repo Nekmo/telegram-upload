@@ -5,6 +5,29 @@ from PySide2.QtGui import QIcon, QBrush, QPen
 from PySide2.QtWidgets import QStyle
 
 
+class CircularListWidget(QtWidgets.QListWidget):
+    """
+    Circular ListWidget.
+
+    https://stackoverflow.com/questions/16239552/pyqt-qlistwidget-with-infinite-scrolling
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Down:
+            if self.currentRow() == self.count()-1:
+                self.setCurrentRow(0)
+                return
+        elif event.key() == Qt.Key_Up:
+            if self.currentRow() == 0:
+                self.setCurrentRow(self.count()-1)
+                return
+
+        # Otherwise, parent behavior
+        super().keyPressEvent(event)
+
+
 class Form(QtWidgets.QMainWindow):
 
     def __init__(self, parent=None):
