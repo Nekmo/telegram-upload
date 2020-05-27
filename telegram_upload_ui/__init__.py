@@ -2,7 +2,7 @@ import sys
 from PySide2 import QtWidgets
 from PySide2.QtCore import Qt
 from PySide2.QtGui import QIcon, QBrush, QPen
-from PySide2.QtWidgets import QStyle
+from PySide2.QtWidgets import QStyle, QVBoxLayout
 
 
 class CircularListWidget(QtWidgets.QListWidget):
@@ -28,6 +28,26 @@ class CircularListWidget(QtWidgets.QListWidget):
         super().keyPressEvent(event)
 
 
+class ConfirmUploadDialog(QtWidgets.QDialog):
+    def __init__(self, parent, **kwargs):
+        super().__init__(parent, **kwargs)
+        self.createTable()
+        self.layout = QVBoxLayout()
+        self.layout.addWidget(self.tableWidget)
+        self.setLayout(self.layout)
+
+    def createTable(self):
+        # Create table
+        self.tableWidget = QtWidgets.QTableWidget(1, 3)
+        item1 = QtWidgets.QTableWidgetItem("foo")
+        comboBox = QtWidgets.QComboBox()
+        progressBar = QtWidgets.QProgressBar()
+        progressBar.setValue(50)
+        self.tableWidget.setItem(0, 0, item1)
+        self.tableWidget.setCellWidget(0, 1, comboBox)
+        self.tableWidget.setCellWidget(0, 2, progressBar)
+
+
 class Form(QtWidgets.QMainWindow):
 
     def __init__(self, parent=None):
@@ -45,7 +65,8 @@ class Form(QtWidgets.QMainWindow):
         selectFiles = QtWidgets.QAction(QIcon.fromTheme("folder"), 'Select files', self)
         selectFiles.setShortcut('Ctrl+F')
         selectFiles.setStatusTip('Select files')
-        selectFiles.triggered.connect(self.getfiles)
+        # TODO: selectFiles.triggered.connect(self.getfiles)
+        selectFiles.triggered.connect(self.open_confirm_upload_dialog)
 
         self.statusBar()
 
@@ -87,6 +108,11 @@ class Form(QtWidgets.QMainWindow):
         self.tableWidget.setItem(0, 0, item1)
         self.tableWidget.setCellWidget(0, 1, comboBox)
         self.tableWidget.setCellWidget(0, 2, progressBar)
+
+    def open_confirm_upload_dialog(self):
+        dialog = ConfirmUploadDialog(self)
+        # dialog.ui = Ui_MyDialog()
+        dialog.exec_()
 
 
 if __name__ == '__main__':
