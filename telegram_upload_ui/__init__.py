@@ -1,8 +1,11 @@
+import os
 import sys
+import glob
+
 from PySide2 import QtWidgets
 from PySide2.QtCore import Qt
-from PySide2.QtGui import QIcon, QBrush, QPen
-from PySide2.QtWidgets import QStyle, QVBoxLayout
+from PySide2.QtGui import QIcon
+from PySide2.QtWidgets import QVBoxLayout, QHeaderView
 
 
 class CircularListWidget(QtWidgets.QListWidget):
@@ -33,19 +36,48 @@ class ConfirmUploadDialog(QtWidgets.QDialog):
         super().__init__(parent, **kwargs)
         self.createTable()
         self.layout = QVBoxLayout()
+        label = QtWidgets.QLabel()
+        label.setText('Confirm before uploading files')
+        self.layout.addWidget(label)
         self.layout.addWidget(self.tableWidget)
+        upload_button = QtWidgets.QDialogButtonBox()
+        upload_button.addButton("Apply", QtWidgets.QDialogButtonBox.AcceptRole)
+        upload_button.addButton("Cancel", QtWidgets.QDialogButtonBox.RejectRole)
+        self.layout.addWidget(upload_button)
         self.setLayout(self.layout)
+        self.setGeometry(350, 350, 600, 350)
 
     def createTable(self):
         # Create table
-        self.tableWidget = QtWidgets.QTableWidget(1, 3)
-        item1 = QtWidgets.QTableWidgetItem("foo")
-        comboBox = QtWidgets.QComboBox()
-        progressBar = QtWidgets.QProgressBar()
-        progressBar.setValue(50)
-        self.tableWidget.setItem(0, 0, item1)
-        self.tableWidget.setCellWidget(0, 1, comboBox)
-        self.tableWidget.setCellWidget(0, 2, progressBar)
+        self.tableWidget = QtWidgets.QTableWidget()
+        self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        directory = os.path.expanduser('~')
+        files = glob.glob1(directory, '*.mkv')
+        self.tableWidget.setRowCount(len(files))
+        self.tableWidget.setColumnCount(2)
+        self.tableWidget.setHorizontalHeaderLabels(('File Name', 'Size'))
+        self.tableWidget.setSortingEnabled(True)
+        self.tableWidget.verticalHeader().setVisible(False)
+        self.tableWidget.horizontalHeader().setMinimumHeight(25)
+        for i, file in enumerate(files):
+            path = os.path.join(directory, file)
+            # file
+            item = QtWidgets.QTableWidgetItem(file)
+            color = item.textColor()
+            item.setFlags(Qt.ItemIsEditable)
+            item.setTextColor(color)
+            self.tableWidget.setItem(i, 0, item)
+            # size
+            item = QtWidgets.QTableWidgetItem(f'{os.path.getsize(path)}')
+            item.setFlags(Qt.ItemIsEditable)
+            item.setTextColor(color)
+            self.tableWidget.setItem(i, 1, item)
+        self.tableWidget.move(0, 0)
+        # comboBox = QtWidgets.QComboBox()
+        # progressBar = QtWidgets.QProgressBar()
+        # progressBar.setValue(50)
+        # self.tableWidget.setCellWidget(0, 1, comboBox)
+        # self.tableWidget.setCellWidget(0, 2, progressBar)
 
 
 class Form(QtWidgets.QMainWindow):
