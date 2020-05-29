@@ -2,10 +2,15 @@ import os
 import sys
 import glob
 
-from PySide2 import QtWidgets
+from PySide2 import QtWidgets, QtGui
 from PySide2.QtCore import Qt
-from PySide2.QtGui import QIcon
-from PySide2.QtWidgets import QVBoxLayout, QHeaderView
+from PySide2.QtGui import QIcon, QPixmap, QPainterPath, QPainter
+
+from telegram_upload.client import Client
+from telegram_upload.config import CONFIG_FILE
+
+
+PHOTOS_DIRECTORY = os.path.expanduser('~/.config/telegram-upload/photos/')
 
 
 class CircularListWidget(QtWidgets.QListWidget):
@@ -33,13 +38,55 @@ class CircularListWidget(QtWidgets.QListWidget):
 
 class ConfirmUploadDialog(QtWidgets.QDialog):
     def __init__(self, parent, **kwargs):
+        self.parent_window: 'Form' = kwargs.pop('parent_window')
         super().__init__(parent, **kwargs)
         self.createTable()
-        self.layout = QVBoxLayout()
-        label = QtWidgets.QLabel()
-        label.setText('Confirm before uploading files')
-        self.layout.addWidget(label)
-        self.layout.addWidget(self.tableWidget)
+        self.layout = QtWidgets.QVBoxLayout()
+
+        # label = QtWidgets.QLabel()
+        # label.setText('Confirm before uploading files')
+        # self.layout.addWidget(label)
+        central_layout = QtWidgets.QHBoxLayout()
+
+        dialogs_list_widget = CircularListWidget()
+        for i, dialog in enumerate(self.parent_window.telegram_client.iter_dialogs()):
+            photo = os.path.join(PHOTOS_DIRECTORY, f'{dialog.id}.jpg')
+            if not os.path.lexists(photo):
+                photo = self.parent_window.telegram_client.download_profile_photo(
+                    dialog, file=photo.rsplit('.jpg')[0]
+                )
+            if photo:
+                # https://stackoverflow.com/questions/36597124/rounded-icon-on-qpushbutton
+                original_pixmap = QPixmap(photo)
+                size = max(original_pixmap.width(), original_pixmap.height())
+                rounded_pixmap = QPixmap(size, size)
+                rounded_pixmap.fill(Qt.transparent)
+                painter_path = QPainterPath()
+                painter_path.addEllipse(rounded_pixmap.rect())
+                painter = QPainter(rounded_pixmap)
+                painter.setClipPath(painter_path)
+                painter.fillRect(rounded_pixmap.rect(), Qt.black)
+
+                painter.drawPixmap(abs(original_pixmap.width() - size) / 2,
+                                   abs(original_pixmap.height() - size) / 2,
+                                   original_pixmap.width(), original_pixmap.height(),
+                                   original_pixmap)
+                painter.end()
+
+                # TODO: rounded_pixmap.fill(Transparent)
+                icon = QIcon()
+                icon.addPixmap(rounded_pixmap)
+                # icon.addFile(photo)
+                item = QtWidgets.QListWidgetItem(icon, dialog.name)
+            else:
+                item = QtWidgets.QListWidgetItem(dialog.name)
+            dialogs_list_widget.addItem(item)
+            if i > 10:
+                break
+        central_layout.addWidget(dialogs_list_widget, 1)
+
+        central_layout.addWidget(self.tableWidget, 2)
+        self.layout.addLayout(central_layout)
         upload_button = QtWidgets.QDialogButtonBox()
         upload_button.addButton("Apply", QtWidgets.QDialogButtonBox.AcceptRole)
         upload_button.addButton("Cancel", QtWidgets.QDialogButtonBox.RejectRole)
@@ -50,7 +97,7 @@ class ConfirmUploadDialog(QtWidgets.QDialog):
     def createTable(self):
         # Create table
         self.tableWidget = QtWidgets.QTableWidget()
-        self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.tableWidget.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
         directory = os.path.expanduser('~')
         files = glob.glob1(directory, '*.mkv')
         self.tableWidget.setRowCount(len(files))
@@ -82,8 +129,9 @@ class ConfirmUploadDialog(QtWidgets.QDialog):
 
 class Form(QtWidgets.QMainWindow):
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, telegram_client: 'Client' = None):
         super(Form, self).__init__(parent)
+        self.telegram_client = telegram_client
 
         # textEdit = QtWidgets.QTextEdit()
         # self.setCentralWidget(textEdit)
@@ -142,7 +190,7 @@ class Form(QtWidgets.QMainWindow):
         self.tableWidget.setCellWidget(0, 2, progressBar)
 
     def open_confirm_upload_dialog(self):
-        dialog = ConfirmUploadDialog(self)
+        dialog = ConfirmUploadDialog(self, parent_window=self)
         # dialog.ui = Ui_MyDialog()
         dialog.exec_()
 
@@ -150,8 +198,10 @@ class Form(QtWidgets.QMainWindow):
 if __name__ == '__main__':
     # Create the Qt Application
     app = QtWidgets.QApplication(sys.argv)
+    client = Client(CONFIG_FILE)
+    client.start()
     # Create and show the form
-    form = Form()
+    form = Form(telegram_client=client)
     form.show()
     # Run the main Qt loop
     sys.exit(app.exec_())
