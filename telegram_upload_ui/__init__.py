@@ -8,6 +8,7 @@ from PySide2.QtGui import QIcon, QPixmap, QPainterPath, QPainter
 
 from telegram_upload.config import CONFIG_FILE
 from telegram_upload_ui.widgets.actions import Action
+from telegram_upload_ui.widgets.pixmap import RoundedPixmap
 from telegram_upload_ui.widgets.table import TableWidget, TableWidgetReadOnlyItem
 from telegram_upload_ui.widgets.window import MainWindow
 
@@ -57,27 +58,8 @@ class ConfirmUploadDialog(QtWidgets.QDialog):
                     dialog, file=photo.rsplit('.jpg')[0]
                 )
             if photo:
-                # https://stackoverflow.com/questions/36597124/rounded-icon-on-qpushbutton
-                original_pixmap = QPixmap(photo)
-                size = max(original_pixmap.width(), original_pixmap.height())
-                rounded_pixmap = QPixmap(size, size)
-                rounded_pixmap.fill(Qt.transparent)
-                painter_path = QPainterPath()
-                painter_path.addEllipse(rounded_pixmap.rect())
-                painter = QPainter(rounded_pixmap)
-                painter.setClipPath(painter_path)
-                painter.fillRect(rounded_pixmap.rect(), Qt.black)
-
-                painter.drawPixmap(abs(original_pixmap.width() - size) / 2,
-                                   abs(original_pixmap.height() - size) / 2,
-                                   original_pixmap.width(), original_pixmap.height(),
-                                   original_pixmap)
-                painter.end()
-
-                # TODO: rounded_pixmap.fill(Transparent)
                 icon = QIcon()
-                icon.addPixmap(rounded_pixmap)
-                # icon.addFile(photo)
+                icon.addPixmap(RoundedPixmap(photo))
                 item = QtWidgets.QListWidgetItem(icon, dialog.name)
                 item.setSizeHint(QSize(item.sizeHint().width(), 35))
             else:
