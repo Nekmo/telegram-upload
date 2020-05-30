@@ -2,8 +2,8 @@ import os
 import sys
 import glob
 
-from PySide2 import QtWidgets, QtGui
-from PySide2.QtCore import Qt, QSize
+from PySide2 import QtWidgets, QtGui, QtCore
+from PySide2.QtCore import Qt, QSize, QObject, Signal
 from PySide2.QtGui import QIcon, QPixmap, QPainterPath, QPainter
 
 from telegram_upload.config import CONFIG_FILE
@@ -39,15 +39,14 @@ class CircularListWidget(QtWidgets.QListWidget):
 
 
 class ConfirmUploadDialog(QtWidgets.QDialog):
+
     def __init__(self, parent, **kwargs):
         self.parent_window: 'TelegramUploadWindow' = kwargs.pop('parent_window')
+        self.files = kwargs.pop('files')
         super().__init__(parent, **kwargs)
-        self.createTable()
+        self.create_table()
         self.layout = QtWidgets.QVBoxLayout()
 
-        # label = QtWidgets.QLabel()
-        # label.setText('Confirm before uploading files')
-        # self.layout.addWidget(label)
         central_layout = QtWidgets.QHBoxLayout()
 
         dialogs_list_widget = CircularListWidget()
@@ -71,23 +70,27 @@ class ConfirmUploadDialog(QtWidgets.QDialog):
 
         central_layout.addWidget(self.tableWidget, 2)
         self.layout.addLayout(central_layout)
-        upload_button = QtWidgets.QDialogButtonBox()
-        upload_button.addButton("Apply", QtWidgets.QDialogButtonBox.AcceptRole)
-        upload_button.addButton("Cancel", QtWidgets.QDialogButtonBox.RejectRole)
+        upload_button = QtWidgets.QDialogButtonBox(
+            QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel
+        )
+        upload_button.accepted.connect(self.confirm)
+        upload_button.rejected.connect(self.close)
         self.layout.addWidget(upload_button)
         self.setLayout(self.layout)
         self.setGeometry(350, 350, 600, 350)
 
-    def createTable(self):
+    def confirm(self):
+        self.parent_window.add_files(self.files)
+        self.parent_window.activateWindow()
+        self.close()
+
+    def create_table(self):
         # Create table
         self.tableWidget = TableWidget(header_labels=('File Name', 'Size'))
-        directory = os.path.expanduser('~')
-        files = glob.glob1(directory, '*.mkv')
         self.tableWidget.horizontalHeader().setMinimumHeight(25)
-        for i, file in enumerate(files):
-            path = os.path.join(directory, file)
+        for i, path in enumerate(self.files):
             self.tableWidget.add_row(
-                QtWidgets.QTableWidgetItem(file),
+                QtWidgets.QTableWidgetItem(os.path.basename(path)),
                 QtWidgets.QTableWidgetItem(f'{os.path.getsize(path)}')
             )
         self.tableWidget.update_rows_count()
@@ -109,19 +112,18 @@ class TelegramUploadWindow(MainWindow):
         # https://specifications.freedesktop.org/icon-naming-spec/icon-naming-spec-latest.html
         return [
             Action("folder", 'Select files', self, shortcut='Ctrl+F',
-                   connect=self.open_confirm_upload_dialog),
+                   connect=self.get_files),
             Action("application-exit", 'Exit application', self,
                    shortcut='Ctrl+Q', connect=self.close),
         ]
 
-    def getfiles(self):
+    def get_files(self):
         dlg = QtWidgets.QFileDialog()
         dlg.setFileMode(QtWidgets.QFileDialog.ExistingFiles)
-        # dlg.setFilter("Text files (*.txt)")
 
         if dlg.exec_():
             filenames = dlg.selectedFiles()
-            print(filenames)
+            self.open_confirm_upload_dialog(filenames)
 
     def createTable(self):
         # Create table
@@ -129,12 +131,6 @@ class TelegramUploadWindow(MainWindow):
             'File name', 'File size',
             'Caption', 'Progress'
         ))
-        self.tableWidget.add_row(
-            TableWidgetReadOnlyItem('foo'),
-            TableWidgetReadOnlyItem('128 KiB', align=Qt.AlignRight | Qt.AlignVCenter),
-            QtWidgets.QComboBox(),
-            QtWidgets.QProgressBar(),
-        )
 
     def create_status_bar(self):
         status_bar = QtWidgets.QStatusBar()
@@ -142,10 +138,19 @@ class TelegramUploadWindow(MainWindow):
         status_bar.addWidget(QtWidgets.QProgressBar())
         self.setStatusBar(status_bar)
 
-    def open_confirm_upload_dialog(self):
-        dialog = ConfirmUploadDialog(self, parent_window=self)
-        # dialog.ui = Ui_MyDialog()
+    def open_confirm_upload_dialog(self, files):
+        dialog = ConfirmUploadDialog(self, parent_window=self, files=files)
         dialog.exec_()
+
+    def add_files(self, files):
+        self.files = files
+        for file in files:
+            self.tableWidget.add_row(
+                TableWidgetReadOnlyItem(file),
+                TableWidgetReadOnlyItem('128 KiB', align=Qt.AlignRight | Qt.AlignVCenter),
+                QtWidgets.QComboBox(),
+                QtWidgets.QProgressBar(),
+            )
 
 
 if __name__ == '__main__':

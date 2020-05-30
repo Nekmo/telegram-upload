@@ -1,4 +1,5 @@
 # https://stackoverflow.com/questions/51893313/adjust-the-size-width-height-of-a-custom-qtablewidget
+# https://www.learnpyqt.com/courses/model-views/qtableview-modelviews-numpy-pandas/
 from PySide2 import QtWidgets
 from PySide2.QtCore import Qt
 
