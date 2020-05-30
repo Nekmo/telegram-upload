@@ -3,12 +3,13 @@ import sys
 import glob
 
 from PySide2 import QtWidgets, QtGui
-from PySide2.QtCore import Qt
+from PySide2.QtCore import Qt, QSize
 from PySide2.QtGui import QIcon, QPixmap, QPainterPath, QPainter
 
 from telegram_upload.client import Client
 from telegram_upload.config import CONFIG_FILE
-
+from telegram_upload_ui.widgets.actions import Action
+from telegram_upload_ui.widgets.window import MainWindow
 
 PHOTOS_DIRECTORY = os.path.expanduser('~/.config/telegram-upload/photos/')
 
@@ -38,7 +39,7 @@ class CircularListWidget(QtWidgets.QListWidget):
 
 class ConfirmUploadDialog(QtWidgets.QDialog):
     def __init__(self, parent, **kwargs):
-        self.parent_window: 'Form' = kwargs.pop('parent_window')
+        self.parent_window: 'TelegramUploadWindow' = kwargs.pop('parent_window')
         super().__init__(parent, **kwargs)
         self.createTable()
         self.layout = QtWidgets.QVBoxLayout()
@@ -78,6 +79,7 @@ class ConfirmUploadDialog(QtWidgets.QDialog):
                 icon.addPixmap(rounded_pixmap)
                 # icon.addFile(photo)
                 item = QtWidgets.QListWidgetItem(icon, dialog.name)
+                item.setSizeHint(QSize(item.sizeHint().width(), 35))
             else:
                 item = QtWidgets.QListWidgetItem(dialog.name)
             dialogs_list_widget.addItem(item)
@@ -127,47 +129,25 @@ class ConfirmUploadDialog(QtWidgets.QDialog):
         # self.tableWidget.setCellWidget(0, 2, progressBar)
 
 
-class Form(QtWidgets.QMainWindow):
+class TelegramUploadWindow(MainWindow):
+    window_title = 'Telegram Upload'
+    geometry = (300, 300, 350, 250)
 
     def __init__(self, parent=None, telegram_client: 'Client' = None):
-        super(Form, self).__init__(parent)
+        super().__init__(parent)
         self.telegram_client = telegram_client
-
-        # textEdit = QtWidgets.QTextEdit()
-        # self.setCentralWidget(textEdit)
-
-        # https://specifications.freedesktop.org/icon-naming-spec/icon-naming-spec-latest.html
-        exitAct = QtWidgets.QAction(QIcon.fromTheme("application-exit"), 'Exit', self)
-        exitAct.setShortcut('Ctrl+Q')
-        exitAct.setStatusTip('Exit application')
-        exitAct.triggered.connect(self.close)
-
-        selectFiles = QtWidgets.QAction(QIcon.fromTheme("folder"), 'Select files', self)
-        selectFiles.setShortcut('Ctrl+F')
-        selectFiles.setStatusTip('Select files')
-        # TODO: selectFiles.triggered.connect(self.getfiles)
-        selectFiles.triggered.connect(self.open_confirm_upload_dialog)
-
-        self.statusBar()
-
-        menubar = self.menuBar()
-        fileMenu = menubar.addMenu('&File')
-        fileMenu.addAction(selectFiles)
-        fileMenu.addAction(exitAct)
-
-        toolbar = self.addToolBar('Exit')
-        toolbar.addAction(selectFiles)
-        toolbar.addAction(exitAct)
-
         self.createTable()
         self.setCentralWidget(self.tableWidget)
-        # self.layout = QtWidgets.QVBoxLayout()
-        # self.layout.addWidget(self.tableWidget)
-        # self.setLayout(self.layout)
-
-        self.setGeometry(300, 300, 350, 250)
-        self.setWindowTitle('Main window')
         self.show()
+
+    def get_actions(self):
+        # https://specifications.freedesktop.org/icon-naming-spec/icon-naming-spec-latest.html
+        return [
+            Action("folder", 'Select files', self, shortcut='Ctrl+F',
+                   connect=self.open_confirm_upload_dialog),
+            Action("application-exit", 'Exit application', self,
+                   shortcut='Ctrl+Q', connect=self.close),
+        ]
 
     def getfiles(self):
         dlg = QtWidgets.QFileDialog()
@@ -201,7 +181,7 @@ if __name__ == '__main__':
     client = Client(CONFIG_FILE)
     client.start()
     # Create and show the form
-    form = Form(telegram_client=client)
+    form = TelegramUploadWindow(telegram_client=client)
     form.show()
     # Run the main Qt loop
     sys.exit(app.exec_())
