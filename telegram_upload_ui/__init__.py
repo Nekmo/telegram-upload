@@ -6,9 +6,9 @@ from PySide2 import QtWidgets, QtGui
 from PySide2.QtCore import Qt, QSize
 from PySide2.QtGui import QIcon, QPixmap, QPainterPath, QPainter
 
-from telegram_upload.client import Client
 from telegram_upload.config import CONFIG_FILE
 from telegram_upload_ui.widgets.actions import Action
+from telegram_upload_ui.widgets.table import TableWidget, TableWidgetReadOnlyItem
 from telegram_upload_ui.widgets.window import MainWindow
 
 PHOTOS_DIRECTORY = os.path.expanduser('~/.config/telegram-upload/photos/')
@@ -98,35 +98,18 @@ class ConfirmUploadDialog(QtWidgets.QDialog):
 
     def createTable(self):
         # Create table
-        self.tableWidget = QtWidgets.QTableWidget()
-        self.tableWidget.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        self.tableWidget = TableWidget(header_labels=('File Name', 'Size'))
         directory = os.path.expanduser('~')
         files = glob.glob1(directory, '*.mkv')
-        self.tableWidget.setRowCount(len(files))
-        self.tableWidget.setColumnCount(2)
-        self.tableWidget.setHorizontalHeaderLabels(('File Name', 'Size'))
-        self.tableWidget.setSortingEnabled(True)
-        self.tableWidget.verticalHeader().setVisible(False)
         self.tableWidget.horizontalHeader().setMinimumHeight(25)
         for i, file in enumerate(files):
             path = os.path.join(directory, file)
-            # file
-            item = QtWidgets.QTableWidgetItem(file)
-            color = item.textColor()
-            item.setFlags(Qt.ItemIsEditable)
-            item.setTextColor(color)
-            self.tableWidget.setItem(i, 0, item)
-            # size
-            item = QtWidgets.QTableWidgetItem(f'{os.path.getsize(path)}')
-            item.setFlags(Qt.ItemIsEditable)
-            item.setTextColor(color)
-            self.tableWidget.setItem(i, 1, item)
+            self.tableWidget.add_row(
+                QtWidgets.QTableWidgetItem(file),
+                QtWidgets.QTableWidgetItem(f'{os.path.getsize(path)}')
+            )
+        self.tableWidget.update_rows_count()
         self.tableWidget.move(0, 0)
-        # comboBox = QtWidgets.QComboBox()
-        # progressBar = QtWidgets.QProgressBar()
-        # progressBar.setValue(50)
-        # self.tableWidget.setCellWidget(0, 1, comboBox)
-        # self.tableWidget.setCellWidget(0, 2, progressBar)
 
 
 class TelegramUploadWindow(MainWindow):
@@ -160,14 +143,27 @@ class TelegramUploadWindow(MainWindow):
 
     def createTable(self):
         # Create table
-        self.tableWidget = QtWidgets.QTableWidget(1, 3)
-        item1 = QtWidgets.QTableWidgetItem("foo")
-        comboBox = QtWidgets.QComboBox()
-        progressBar = QtWidgets.QProgressBar()
-        progressBar.setValue(50)
-        self.tableWidget.setItem(0, 0, item1)
-        self.tableWidget.setCellWidget(0, 1, comboBox)
-        self.tableWidget.setCellWidget(0, 2, progressBar)
+        self.tableWidget = TableWidget(header_labels=(
+            'File name', 'File size',
+            'Caption', 'Progress'
+        )
+
+        )
+        self.tableWidget.add_row(
+            TableWidgetReadOnlyItem('foo'),
+            TableWidgetReadOnlyItem('128 KiB', align=Qt.AlignRight | Qt.AlignVCenter),
+            QtWidgets.QComboBox(),
+            QtWidgets.QProgressBar(),
+        )
+        # self.tableWidget.update_rows_count()
+
+        # item1 = QtWidgets.QTableWidgetItem("foo")
+        # comboBox = QtWidgets.QComboBox()
+        # progressBar = QtWidgets.QProgressBar()
+        # progressBar.setValue(50)
+        # self.tableWidget.setItem(0, 0, item1)
+        # self.tableWidget.setCellWidget(0, 1, comboBox)
+        # self.tableWidget.setCellWidget(0, 2, progressBar)
 
     def open_confirm_upload_dialog(self):
         dialog = ConfirmUploadDialog(self, parent_window=self)
@@ -178,6 +174,8 @@ class TelegramUploadWindow(MainWindow):
 if __name__ == '__main__':
     # Create the Qt Application
     app = QtWidgets.QApplication(sys.argv)
+    # client = None
+    from telegram_upload.client import Client
     client = Client(CONFIG_FILE)
     client.start()
     # Create and show the form
