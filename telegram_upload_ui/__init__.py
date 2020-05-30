@@ -146,24 +146,19 @@ class TelegramUploadWindow(MainWindow):
         self.tableWidget = TableWidget(header_labels=(
             'File name', 'File size',
             'Caption', 'Progress'
-        )
-
-        )
+        ))
         self.tableWidget.add_row(
             TableWidgetReadOnlyItem('foo'),
             TableWidgetReadOnlyItem('128 KiB', align=Qt.AlignRight | Qt.AlignVCenter),
             QtWidgets.QComboBox(),
             QtWidgets.QProgressBar(),
         )
-        # self.tableWidget.update_rows_count()
 
-        # item1 = QtWidgets.QTableWidgetItem("foo")
-        # comboBox = QtWidgets.QComboBox()
-        # progressBar = QtWidgets.QProgressBar()
-        # progressBar.setValue(50)
-        # self.tableWidget.setItem(0, 0, item1)
-        # self.tableWidget.setCellWidget(0, 1, comboBox)
-        # self.tableWidget.setCellWidget(0, 2, progressBar)
+    def create_status_bar(self):
+        status_bar = QtWidgets.QStatusBar()
+        status_bar.addWidget(QtWidgets.QLabel('Uploading 1/3 files'))
+        status_bar.addWidget(QtWidgets.QProgressBar())
+        self.setStatusBar(status_bar)
 
     def open_confirm_upload_dialog(self):
         dialog = ConfirmUploadDialog(self, parent_window=self)

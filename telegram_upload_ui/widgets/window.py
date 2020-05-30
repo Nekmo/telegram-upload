@@ -1,5 +1,5 @@
 from PySide2 import QtWidgets
-
+from PySide2.QtWidgets import QStatusBar
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -9,6 +9,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.create_actions()
+        self.create_status_bar()
         if self.geometry:
             self.setGeometry(*self.geometry)
         if self.window_title:
@@ -21,7 +22,9 @@ class MainWindow(QtWidgets.QMainWindow):
         menubar = self.menuBar()
         fileMenu = menubar.addMenu('&File')
         toolbar = self.addToolBar('Exit')
-        self.statusBar()
         for action in self.get_actions():
             fileMenu.addAction(action)
             toolbar.addAction(action)
+
+    def create_status_bar(self):
+        pass
