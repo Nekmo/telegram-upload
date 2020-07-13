@@ -40,6 +40,10 @@ def get_progress_bar(action, file, length):
     return progress
 
 
+def truncate(text, max_length):
+    return (text[:max_length - 3] + '...') if len(text) > max_length else text
+
+
 class Client(TelegramClient):
     def __init__(self, config_file, **kwargs):
         config = json.load(open(config_file))
@@ -65,15 +69,14 @@ class Client(TelegramClient):
                 thumb = get_file_thumb(file)
             except ThumbError as e:
                 click.echo('{}'.format(e), err=True)
-            caption = caption[:CAPTION_MAX_LENGTH] if caption else caption
-            caption = caption or ((name[:CAPTION_MAX_LENGTH] + '..') if len(name) > CAPTION_MAX_LENGTH else name)
+            file_caption = truncate(caption or name, CAPTION_MAX_LENGTH)
             try:
                 if force_file:
                     attributes = [DocumentAttributeFilename(file)]
                 else:
                     attributes = get_file_attributes(file)
                 message = self.send_file(entity, file, thumb=thumb,
-                                         caption=caption, force_document=force_file,
+                                         caption=file_caption, force_document=force_file,
                                          progress_callback=progress, attributes=attributes)
             except Exception:
                 raise
