@@ -40,6 +40,18 @@ def get_progress_bar(action, file, length):
     return progress
 
 
+def get_caption(caption, name):
+    caption = caption[:CAPTION_MAX_LENGTH] if caption else caption
+    return caption or ((name[:CAPTION_MAX_LENGTH] + '..') if len(name) > CAPTION_MAX_LENGTH else name)
+
+
+def get_attributes(file, force_file):
+    if force_file:
+        return [DocumentAttributeFilename(file)]
+    else:
+        return get_file_attributes(file)
+
+
 class Client(TelegramClient):
     def __init__(self, config_file, **kwargs):
         config = json.load(open(config_file))
@@ -55,31 +67,33 @@ class Client(TelegramClient):
         return super().start(phone=phone, password=password, bot_token=bot_token, force_sms=force_sms,
                              first_name=first_name, last_name=last_name, max_attempts=max_attempts)
 
+    def send_one_file(self, file, entity, caption='', thumb=None, force_file=False,
+                      progress=None, remove_thumb=True):
+        name = '.'.join(os.path.basename(file).split('.')[:-1])
+        try:
+            caption = get_caption(caption, name)
+            attributes = get_attributes(file, name)
+            message = self.send_file(entity, file, thumb=thumb,
+                                     caption=caption, force_document=force_file,
+                                     progress_callback=progress, attributes=attributes)
+        except Exception:
+            raise
+        finally:
+            if thumb and remove_thumb:
+                os.remove(thumb)
+        return message
+
     def send_files(self, entity, files, delete_on_success=False, print_file_id=False,
                    force_file=False, forward=(), caption=None):
         for file in files:
             progress = get_progress_bar('Uploading', os.path.basename(file), os.path.getsize(file))
-            name = '.'.join(os.path.basename(file).split('.')[:-1])
+
             thumb = None
             try:
                 thumb = get_file_thumb(file)
             except ThumbError as e:
                 click.echo('{}'.format(e), err=True)
-            caption = caption[:CAPTION_MAX_LENGTH] if caption else caption
-            caption = caption or ((name[:CAPTION_MAX_LENGTH] + '..') if len(name) > CAPTION_MAX_LENGTH else name)
-            try:
-                if force_file:
-                    attributes = [DocumentAttributeFilename(file)]
-                else:
-                    attributes = get_file_attributes(file)
-                message = self.send_file(entity, file, thumb=thumb,
-                                         caption=caption, force_document=force_file,
-                                         progress_callback=progress, attributes=attributes)
-            except Exception:
-                raise
-            finally:
-                if thumb:
-                    os.remove(thumb)
+            message = self.send_one_file(file, entity, caption, thumb, force_file, progress)
             click.echo()
             if print_file_id:
                 click.echo('Uploaded successfully "{}" (file_id {})'.format(file, pack_bot_file_id(message.media)))

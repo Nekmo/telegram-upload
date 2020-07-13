@@ -1,15 +1,22 @@
+import asyncio
+import concurrent.futures
 import os
 import sys
 import glob
+import time
+from threading import Thread
 from typing import Union
 
 from PySide2 import QtWidgets, QtGui, QtCore
 from PySide2.QtCore import Qt, QSize, QObject, Signal
 from PySide2.QtGui import QIcon, QPixmap, QPainterPath, QPainter
 from PySide2.QtWidgets import QListWidgetItem
+from asyncqt import QEventLoop, asyncSlot, asyncClose
 from telethon.tl.custom import Dialog
 
 from telegram_upload.config import CONFIG_FILE
+from telegram_upload.exceptions import ThumbError
+from telegram_upload.files import get_file_thumb
 from telegram_upload_ui.file import UploadFile
 from telegram_upload_ui.widgets.actions import Action
 from telegram_upload_ui.widgets.pixmap import RoundedPixmap
@@ -68,14 +75,27 @@ class ConfirmUploadDialog(QtWidgets.QDialog):
 
     def confirm(self):
         for file in self.files:
-            file.dialog = self.selected_dialog
+            file.upload_to = self.selected_dialog
         self.parent_window.add_files(self.files)
         self.parent_window.activateWindow()
+        self.parent_window.resume_uploads()
         self.close()
+
+    async def get_dialogs(self):
+        results = []
+        async for dialog in self.parent_window.telegram_client.iter_dialogs():
+            results.append(dialog)
+        return results
 
     def get_dialogs_list(self):
         dialogs_list_widget = CircularListWidget()
-        for i, dialog in enumerate(self.parent_window.telegram_client.iter_dialogs()):
+        dialogs = self.get_dialogs()
+        loop = self.parent_window.telegram_client.loop
+        # loop = asyncio.get_event_loop()
+        # loop.run_until_complete(asyncio.wait(dialogs))
+        pool = concurrent.futures.ThreadPoolExecutor()
+        result = pool.submit(loop.run_until_complete, dialogs).result()
+        for i, dialog in enumerate(result):
             photo = os.path.join(PHOTOS_DIRECTORY, f'{dialog.id}.jpg')
             if not os.path.lexists(photo):
                 photo = self.parent_window.telegram_client.download_profile_photo(
@@ -127,6 +147,8 @@ class TelegramUploadWindow(MainWindow):
     window_title = 'Telegram Upload'
     geometry = (300, 300, 350, 250)
 
+    progress = Signal(int)
+
     def __init__(self, parent=None, telegram_client: 'Client' = None):
         super().__init__(parent)
         self.telegram_client = telegram_client
@@ -172,25 +194,101 @@ class TelegramUploadWindow(MainWindow):
         for file in files:
             force_file = QtWidgets.QTableWidgetItem()
             force_file.setIcon(QIcon.fromTheme('checkbox' if file.force_file else 'dialog-cancel'))
+            progress = QtWidgets.QProgressBar(self)
+
+            QtCore.QObject.connect(self, QtCore.SIGNAL("customSignal(int)"), progress, QtCore.SLOT("setValue(int)"))
+
+            file.progress = progress
             self.tableWidget.add_row(
                 TableWidgetReadOnlyItem(file.name),
                 TableWidgetReadOnlyItem(file.human_size, align=Qt.AlignRight | Qt.AlignVCenter),
                 TableWidgetReadOnlyItem(file.caption, align=Qt.AlignRight | Qt.AlignVCenter),
-                TableWidgetReadOnlyItem(file.dialog.name, align=Qt.AlignRight | Qt.AlignVCenter),
+                TableWidgetReadOnlyItem(file.upload_to.name, align=Qt.AlignRight | Qt.AlignVCenter),
                 force_file,
-                QtWidgets.QProgressBar(),
+                progress,
             )
+
+    def upload_file(self, file: UploadFile):
+        thumb = None
+        try:
+            thumb = get_file_thumb(file.path)
+        except ThumbError:
+            pass
+        loop = self.telegram_client.loop
+        # loop = asyncio.get_event_loop()
+        # loop.run_until_complete(asyncio.wait(dialogs))
+        pool = concurrent.futures.ThreadPoolExecutor()
+        pool.submit(loop.run_until_complete, self.send_file(file, thumb))
+
+    async def send_file(self, file, thumb):
+        # TODO: https://stackoverflow.com/questions/25733142/qwidgetrepaint-recursive-repaint-detected-when-updating-progress-bar
+        # https://stackoverflow.com/questions/37063664/how-to-control-qprogressbar-with-signal
+        # https://stackoverflow.com/questions/42785859/pyqt-progress-bar-update-with-threads
+        # https://github.com/altendky/alqtendpy/issues/5
+        # https://stackoverflow.com/questions/56284583/how-to-emit-a-pyqtsignal-through-multi-threading-task
+        await self.telegram_client.send_one_file(file.path, file.upload_to, file.caption,
+                                           thumb, file.force_file, file.update_progress)
+
+
+    def resume_uploads(self):
+        for file in self.files:
+            self.upload_file(file)
+
+
+class ClientThread(Thread):
+    def run(self) -> None:
+        from telegram_upload.client import Client
+
+        loop = asyncio.new_event_loop()
+        self.client = Client(CONFIG_FILE, loop=loop)
+        self.client.start()
+        self.client.run_until_disconnected()
+
+    def methods(self):
+        pass
 
 
 if __name__ == '__main__':
-    # Create the Qt Application
-    app = QtWidgets.QApplication(sys.argv)
-    # client = None
+    # c = ClientThread()
+    # c.start()
+    # time.sleep(1)
+    #
+    # future = asyncio.run_coroutine_threadsafe(c.client.get_dialogs(), c.client.loop)
+    # print(future.result())
     from telegram_upload.client import Client
+
     client = Client(CONFIG_FILE)
     client.start()
-    # Create and show the form
-    form = TelegramUploadWindow(telegram_client=client)
-    form.show()
-    # Run the main Qt loop
+
+    app = QtWidgets.QApplication(sys.argv)
+    window = TelegramUploadWindow(telegram_client=client)
+    window.show()
     sys.exit(app.exec_())
+
+    # Qt AsyncIO:
+    # app = QtWidgets.QApplication(sys.argv)
+    # loop = QEventLoop(app)
+    # asyncio.set_event_loop(loop)
+    #
+    # mainWindow = TelegramUploadWindow(telegram_client=client)
+    # mainWindow.show()
+    #
+    # with loop:
+    #     sys.exit(loop.run_forever())
+
+    # print(c.client.loop.call_soon_threadsafe(asyncio.async, c.client.get_dialogs()))
+
+
+# if __name__ == '__main__':
+#     # Create the Qt Application
+#     app = QtWidgets.QApplication(sys.argv)
+#     # client = None
+#
+#     client = ClientThread()
+#     client.start()
+#     time.sleep(1)  # HACK
+#     # Create and show the form
+#     form = TelegramUploadWindow(telegram_client=client.client)
+#     form.show()
+#     # Run the main Qt loop
+#     sys.exit(app.exec_())

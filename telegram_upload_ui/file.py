@@ -1,9 +1,13 @@
 import os
 
+from PySide2 import QtWidgets
+
 from telegram_upload.utils import sizeof_fmt
 
 
 class UploadFile:
+    progress: QtWidgets.QProgressBar
+
     def __init__(self, path):
         self.path = path
         self.caption = ''
@@ -31,3 +35,7 @@ class UploadFile:
 
     def set_is_active(self, boolean):
         self.is_active = bool(boolean)
+
+    def update_progress(self, current, total):
+        print(current)
+        self.progress.setValue((current / total) * 100)
