@@ -7,6 +7,7 @@ import time
 from threading import Thread
 from typing import Union
 
+import PySide2
 from PySide2 import QtWidgets, QtGui, QtCore
 from PySide2.QtCore import Qt, QSize, QObject, Signal
 from PySide2.QtGui import QIcon, QPixmap, QPainterPath, QPainter
@@ -28,26 +29,49 @@ PHOTOS_DIRECTORY = os.path.expanduser('~/.config/telegram-upload/photos/')
 
 
 class CircularListWidget(QtWidgets.QListWidget):
-    """
-    Circular ListWidget.
-
-    https://stackoverflow.com/questions/16239552/pyqt-qlistwidget-with-infinite-scrolling
-    """
     def __init__(self, *args, **kwargs):
+        self.dialog_items = None
+        self.parent_window: 'TelegramUploadWindow' = kwargs.pop('parent_window')
+
         super().__init__(*args, **kwargs)
+        self.verticalScrollBar().valueChanged.connect(self.verticalScrollEvent)
 
-    def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Down:
-            if self.currentRow() == self.count()-1:
-                self.setCurrentRow(0)
-                return
-        elif event.key() == Qt.Key_Up:
-            if self.currentRow() == 0:
-                self.setCurrentRow(self.count()-1)
-                return
+    def verticalScrollEvent(self, value):
+        if value >= self.verticalScrollBar().maximum():
+            self.load_page()
 
-        # Otherwise, parent behavior
-        super().keyPressEvent(event)
+    def load_page(self):
+        for i, dialog in enumerate(self.dialog_items):
+            self.show_dialog(dialog)
+            if i >= 10:
+                break
+
+    def set_items(self, result):
+        self.dialog_items = iter(result)
+        for i, dialog in enumerate(self.dialog_items):
+            item = self.show_dialog(dialog)
+            if not i:
+                self.selected_dialog = dialog
+                self.setCurrentItem(item)
+            if i > 10:
+                break
+
+    def show_dialog(self, dialog):
+        photo = os.path.join(PHOTOS_DIRECTORY, f'{dialog.id}.jpg')
+        if not os.path.lexists(photo):
+            photo = self.parent_window.telegram_client.download_profile_photo(
+                dialog, file=photo.rsplit('.jpg')[0]
+            )
+        if photo:
+            icon = QIcon()
+            icon.addPixmap(RoundedPixmap(photo))
+            item = QtWidgets.QListWidgetItem(icon, dialog.name)
+            item.setSizeHint(QSize(item.sizeHint().width(), 35))
+        else:
+            item = QtWidgets.QListWidgetItem(dialog.name)
+        item.setData(1000, dialog)
+        self.addItem(item)
+        return item
 
 
 class ConfirmUploadDialog(QtWidgets.QDialog):
@@ -89,33 +113,14 @@ class ConfirmUploadDialog(QtWidgets.QDialog):
         return results
 
     def get_dialogs_list(self):
-        dialogs_list_widget = CircularListWidget()
+        dialogs_list_widget = CircularListWidget(parent_window=self.parent_window)
         dialogs = self.get_dialogs()
         loop = self.parent_window.telegram_client.loop
         # loop = asyncio.get_event_loop()
         # loop.run_until_complete(asyncio.wait(dialogs))
         pool = concurrent.futures.ThreadPoolExecutor()
         result = pool.submit(loop.run_until_complete, dialogs).result()
-        for i, dialog in enumerate(result):
-            photo = os.path.join(PHOTOS_DIRECTORY, f'{dialog.id}.jpg')
-            if not os.path.lexists(photo):
-                photo = self.parent_window.telegram_client.download_profile_photo(
-                    dialog, file=photo.rsplit('.jpg')[0]
-                )
-            if photo:
-                icon = QIcon()
-                icon.addPixmap(RoundedPixmap(photo))
-                item = QtWidgets.QListWidgetItem(icon, dialog.name)
-                item.setSizeHint(QSize(item.sizeHint().width(), 35))
-            else:
-                item = QtWidgets.QListWidgetItem(dialog.name)
-            item.setData(1000, dialog)
-            dialogs_list_widget.addItem(item)
-            if not i:
-                self.selected_dialog = dialog
-                dialogs_list_widget.setCurrentItem(item)
-            if i > 10:
-                break
+        dialogs_list_widget.set_items(result)
         dialogs_list_widget.itemActivated.connect(self.set_selected_dialog)
         return dialogs_list_widget
 
