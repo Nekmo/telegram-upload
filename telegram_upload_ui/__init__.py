@@ -1,19 +1,22 @@
 import asyncio
 import concurrent.futures
 import os
+import random
 import sys
 import glob
 import time
 from threading import Thread
 from typing import Union
 
-import PySide2
+import nltk
+from PIL import Image, ImageDraw, ImageFont
 from PySide2 import QtWidgets, QtGui, QtCore
 from PySide2.QtCore import Qt, QSize, QObject, Signal
 from PySide2.QtGui import QIcon, QPixmap, QPainterPath, QPainter
 from PySide2.QtWidgets import QListWidgetItem
 from asyncqt import QEventLoop, asyncSlot, asyncClose
 from telethon.tl.custom import Dialog
+from acronym.acronym import find_acronyms
 
 from telegram_upload import __version__
 from telegram_upload.config import CONFIG_FILE
@@ -26,6 +29,36 @@ from telegram_upload_ui.widgets.table import TableWidget, TableWidgetReadOnlyIte
 from telegram_upload_ui.widgets.window import MainWindow
 
 PHOTOS_DIRECTORY = os.path.expanduser('~/.config/telegram-upload/photos/')
+
+AVATAR_COLORS = [
+    '#a695e7',
+    '#F59F32',
+    '#faa774',
+    '#E17076',
+    '#65AADD',
+    '#6ec9cb',
+    '#7BC862',
+    '#EE7AAE',
+
+]
+
+
+def create_image_text(text, color, font_size=250, width=640, height=640):
+    im = Image.new("RGB", (width, height), color)
+    draw = ImageDraw.Draw(im)
+    font = ImageFont.truetype('arial.ttf', size=font_size)
+    w, h = draw.textsize(text, font=font)
+    draw.text(((width - w) / 2, (height - h) / 2), text, fill="white", font=font)
+
+    return im
+
+
+def get_random_acronym(name):
+    if not name:
+        return ''
+    acronyms = find_acronyms(name, nltk.corpus.words, min_length=1, max_length=3)
+    acronym = random.choice(list(acronyms.keys()))
+    return acronym
 
 
 class CircularListWidget(QtWidgets.QListWidget):
@@ -58,17 +91,22 @@ class CircularListWidget(QtWidgets.QListWidget):
 
     def show_dialog(self, dialog):
         photo = os.path.join(PHOTOS_DIRECTORY, f'{dialog.id}.jpg')
+        downloaded_photo = None
+        name = dialog.name or 'Deleted account'
         if not os.path.lexists(photo):
-            photo = self.parent_window.telegram_client.download_profile_photo(
+            downloaded_photo = self.parent_window.telegram_client.download_profile_photo(
                 dialog, file=photo.rsplit('.jpg')[0]
             )
+        if not os.path.lexists(photo) and not downloaded_photo:
+            create_image_text(get_random_acronym(name),
+                              random.choice(AVATAR_COLORS)).save(photo, "JPEG")
         if photo:
             icon = QIcon()
             icon.addPixmap(RoundedPixmap(photo))
-            item = QtWidgets.QListWidgetItem(icon, dialog.name)
+            item = QtWidgets.QListWidgetItem(icon, name)
             item.setSizeHint(QSize(item.sizeHint().width(), 35))
         else:
-            item = QtWidgets.QListWidgetItem(dialog.name)
+            item = QtWidgets.QListWidgetItem(name)
         item.setData(1000, dialog)
         self.addItem(item)
         return item
