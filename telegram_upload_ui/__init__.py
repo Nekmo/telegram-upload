@@ -111,6 +111,9 @@ class ConfirmUploadDialog(QtWidgets.QDialog):
                 item = QtWidgets.QListWidgetItem(dialog.name)
             item.setData(1000, dialog)
             dialogs_list_widget.addItem(item)
+            if not i:
+                self.selected_dialog = dialog
+                dialogs_list_widget.setCurrentItem(item)
             if i > 10:
                 break
         dialogs_list_widget.itemActivated.connect(self.set_selected_dialog)
