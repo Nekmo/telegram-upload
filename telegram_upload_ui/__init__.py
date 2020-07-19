@@ -143,17 +143,21 @@ class ConfirmUploadDialog(QtWidgets.QDialog):
         self.selected_dialog = item.data(1000)
 
 
+class Communicate(QObject):
+    progress = Signal(str, int)
+
+
 class TelegramUploadWindow(MainWindow):
     window_title = 'Telegram Upload'
     geometry = (300, 300, 350, 250)
-
-    progress = Signal(int)
 
     def __init__(self, parent=None, telegram_client: 'Client' = None):
         super().__init__(parent)
         self.telegram_client = telegram_client
         self.createTable()
         self.setCentralWidget(self.tableWidget)
+        self.c = Communicate()
+        self.c.progress.connect(self.update_progress)
         self.show()
 
     def get_actions(self):
@@ -191,13 +195,15 @@ class TelegramUploadWindow(MainWindow):
 
     def add_files(self, files):
         self.files = files
+
         for file in files:
             force_file = QtWidgets.QTableWidgetItem()
             force_file.setIcon(QIcon.fromTheme('checkbox' if file.force_file else 'dialog-cancel'))
             progress = QtWidgets.QProgressBar(self)
 
-            QtCore.QObject.connect(self, QtCore.SIGNAL("customSignal(int)"), progress, QtCore.SLOT("setValue(int)"))
+            # QtCore.QObject.connect(self, QtCore.SIGNAL("customSignal(int)"), progress, QtCore.SLOT("setValue(int)"))
 
+            file.parent = self
             file.progress = progress
             self.tableWidget.add_row(
                 TableWidgetReadOnlyItem(file.name),
@@ -229,6 +235,10 @@ class TelegramUploadWindow(MainWindow):
         await self.telegram_client.send_one_file(file.path, file.upload_to, file.caption,
                                            thumb, file.force_file, file.update_progress)
 
+    def update_progress(self, path, value):
+        print(value)
+        file = next(filter(lambda x: x.path == path, self.files))
+        file.progress.setValue(value)
 
     def resume_uploads(self):
         for file in self.files:

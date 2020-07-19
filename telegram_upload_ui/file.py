@@ -1,11 +1,17 @@
 import os
+from typing import TYPE_CHECKING
 
 from PySide2 import QtWidgets
 
 from telegram_upload.utils import sizeof_fmt
 
 
+if TYPE_CHECKING:
+    from telegram_upload_ui import TelegramUploadWindow
+
+
 class UploadFile:
+    parent: 'TelegramUploadWindow'
     progress: QtWidgets.QProgressBar
 
     def __init__(self, path):
@@ -37,5 +43,5 @@ class UploadFile:
         self.is_active = bool(boolean)
 
     def update_progress(self, current, total):
-        print(current)
-        self.progress.setValue((current / total) * 100)
+        # self.progress.setValue((current / total) * 100)
+        self.parent.c.progress.emit(self.path, (current / total) * 100)
