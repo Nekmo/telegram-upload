@@ -14,6 +14,7 @@ from PySide2.QtWidgets import QListWidgetItem
 from asyncqt import QEventLoop, asyncSlot, asyncClose
 from telethon.tl.custom import Dialog
 
+from telegram_upload import __version__
 from telegram_upload.config import CONFIG_FILE
 from telegram_upload.exceptions import ThumbError
 from telegram_upload.files import get_file_thumb
@@ -152,6 +153,8 @@ class TelegramUploadWindow(MainWindow):
     geometry = (300, 300, 350, 250)
 
     def __init__(self, parent=None, telegram_client: 'Client' = None):
+        self.status_bar_progress = QtWidgets.QLabel(f'Telegram upload {__version__}')
+        self.status_bar_progress_bar = QtWidgets.QProgressBar()
         super().__init__(parent)
         self.telegram_client = telegram_client
         self.createTable()
@@ -185,8 +188,8 @@ class TelegramUploadWindow(MainWindow):
 
     def create_status_bar(self):
         status_bar = QtWidgets.QStatusBar()
-        status_bar.addWidget(QtWidgets.QLabel('Uploading 1/3 files'))
-        status_bar.addWidget(QtWidgets.QProgressBar())
+        status_bar.addWidget(self.status_bar_progress)
+        status_bar.addWidget(self.status_bar_progress_bar)
         self.setStatusBar(status_bar)
 
     def open_confirm_upload_dialog(self, files):
@@ -236,9 +239,12 @@ class TelegramUploadWindow(MainWindow):
                                            thumb, file.force_file, file.update_progress)
 
     def update_progress(self, path, value):
-        print(value)
         file = next(filter(lambda x: x.path == path, self.files))
         file.progress.setValue(value)
+        total = sum(map(lambda x: x.progress.value(), self.files)) / len(self.files)
+        uploaded = len(list(filter(lambda x: x.progress.value() == 100, self.files)))
+        self.status_bar_progress.setText(f'Uploaded {uploaded}/{len(self.files)} files')
+        self.status_bar_progress_bar.setValue(total)
 
     def resume_uploads(self):
         for file in self.files:
