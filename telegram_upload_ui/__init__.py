@@ -22,6 +22,7 @@ from telegram_upload import __version__
 from telegram_upload.config import CONFIG_FILE
 from telegram_upload.exceptions import ThumbError
 from telegram_upload.files import get_file_thumb
+from telegram_upload_ui.about import AboutDialog
 from telegram_upload_ui.file import UploadFile
 from telegram_upload_ui.widgets.actions import Action
 from telegram_upload_ui.widgets.pixmap import RoundedPixmap
@@ -199,7 +200,7 @@ class TelegramUploadWindow(MainWindow):
     geometry = (300, 300, 350, 250)
 
     def __init__(self, parent=None, telegram_client: 'Client' = None):
-        self.status_bar_progress = QtWidgets.QLabel(f'Telegram upload {__version__}')
+        self.status_bar_progress = QtWidgets.QLabel(f'Telegram Upload {__version__}')
         self.status_bar_progress_bar = QtWidgets.QProgressBar()
         super().__init__(parent)
         self.telegram_client = telegram_client
@@ -217,6 +218,22 @@ class TelegramUploadWindow(MainWindow):
             Action("application-exit", 'Exit application', self,
                    shortcut='Ctrl+Q', connect=self.close),
         ]
+
+    def create_actions(self):
+        super().create_actions()
+        menubar = self.menuBar()
+        fileMenu = menubar.addMenu('&File')
+        for action in self.get_actions():
+            fileMenu.addAction(action)
+        fileMenu = menubar.addMenu('&Help')
+        fileMenu.addAction(
+            Action("about", 'About', self, shortcut='Ctrl+A',
+                   connect=self.open_about)
+        )
+
+    def open_about(self):
+        dialog = AboutDialog()
+        dialog.exec_()
 
     def get_files(self):
         dlg = QtWidgets.QFileDialog()

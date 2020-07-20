@@ -19,11 +19,8 @@ class MainWindow(QtWidgets.QMainWindow):
         raise NotImplementedError
 
     def create_actions(self):
-        menubar = self.menuBar()
-        fileMenu = menubar.addMenu('&File')
         toolbar = self.addToolBar('Exit')
         for action in self.get_actions():
-            fileMenu.addAction(action)
             toolbar.addAction(action)
 
     def create_status_bar(self):
