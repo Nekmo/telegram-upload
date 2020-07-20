@@ -42,6 +42,8 @@ AVATAR_COLORS = [
     '#EE7AAE',
 
 ]
+REPORT_BUG_URL = 'https://github.com/Nekmo/telegram-upload/issues/new'
+DOCS_URL = 'https://docs.nekmo.org/telegram-upload/'
 
 
 def create_image_text(text, color, font_size=250, width=640, height=640):
@@ -227,13 +229,26 @@ class TelegramUploadWindow(MainWindow):
             fileMenu.addAction(action)
         fileMenu = menubar.addMenu('&Help')
         fileMenu.addAction(
-            Action("about", 'About', self, shortcut='Ctrl+A',
-                   connect=self.open_about)
+            Action("help-contents", 'Online help', self, shortcut='',
+                   connect=lambda: self.open_url(DOCS_URL)),
+        )
+        fileMenu.addAction(
+            Action("", 'Report a bug', self, shortcut='',
+                   connect=lambda: self.open_url(REPORT_BUG_URL)),
+        )
+        fileMenu.addAction(
+            Action("help-about", 'About', self, shortcut='Ctrl+A',
+                   connect=self.open_about),
         )
 
     def open_about(self):
         dialog = AboutDialog()
         dialog.exec_()
+
+    def open_url(self, url):
+        url = QtCore.QUrl(url)
+        if not QtGui.QDesktopServices.openUrl(url):
+            QtGui.QMessageBox.warning(self, 'Open Url', 'Could not open url')
 
     def get_files(self):
         dlg = QtWidgets.QFileDialog()
