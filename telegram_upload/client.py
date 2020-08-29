@@ -71,7 +71,7 @@ class Client(TelegramClient):
                     thumb = get_file_thumb(file)
                 except ThumbError as e:
                     click.echo('{}'.format(e), err=True)
-            file_caption = truncate(caption or name, CAPTION_MAX_LENGTH)
+            file_caption = truncate(caption if caption is not None else name, CAPTION_MAX_LENGTH)
             try:
                 if force_file:
                     attributes = [DocumentAttributeFilename(file)]
