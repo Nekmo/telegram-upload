@@ -62,9 +62,10 @@ class Client(TelegramClient):
     def send_files(self, entity, files, delete_on_success=False, print_file_id=False,
                    force_file=False, forward=(), caption=None, no_thumbnail=False):
         for file in files:
+            file_name = os.path.basename(file)
             file_size = os.path.getsize(file)
-            progress, bar = get_progress_bar('Uploading', os.path.basename(file), file_size)
-            name = '.'.join(os.path.basename(file).split('.')[:-1])
+            progress, bar = get_progress_bar('Uploading', file_name, file_size)
+            name = '.'.join(file_name.split('.')[:-1])
             thumb = None
             if not no_thumbnail:
                 try:
@@ -74,7 +75,7 @@ class Client(TelegramClient):
             file_caption = truncate(caption if caption is not None else name, CAPTION_MAX_LENGTH)
             try:
                 if force_file:
-                    attributes = [DocumentAttributeFilename(file)]
+                    attributes = [DocumentAttributeFilename(file_name)]
                 else:
                     attributes = get_file_attributes(file)
                 try:
