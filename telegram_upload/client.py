@@ -32,7 +32,7 @@ def phone_match(value):
 
 
 def get_progress_bar(action, file, length):
-    bar = click.progressbar(label='{} {}'.format(action, file), length=length)
+    bar = click.progressbar(label='{} "{}"'.format(action, file), length=length)
 
     def progress(current, total):
         bar.pos = 0
