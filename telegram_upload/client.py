@@ -94,7 +94,7 @@ class Client(TelegramClient):
             if print_file_id:
                 click.echo('Uploaded successfully "{}" (file_id {})'.format(file, pack_bot_file_id(message.media)))
             if delete_on_success:
-                click.echo('Deleting {}'.format(file))
+                click.echo('Deleting "{}"'.format(file))
                 os.remove(file)
             self.forward_to(message, forward)
 
