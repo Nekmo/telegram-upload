@@ -32,12 +32,12 @@ def phone_match(value):
 
 
 def get_progress_bar(action, file, length):
-    bar = click.progressbar(label='{} {}'.format(action, file), length=length)
+    bar = click.progressbar(label='{} "{}"'.format(action, file), length=length)
 
     def progress(current, total):
         bar.pos = 0
         bar.update(current)
-    return progress
+    return progress, bar
 
 
 def truncate(text, max_length):
@@ -62,7 +62,7 @@ class Client(TelegramClient):
     def send_files(self, entity, files, delete_on_success=False, print_file_id=False,
                    force_file=False, forward=(), caption=None):
         for file in files:
-            progress = get_progress_bar('Uploading', os.path.basename(file), os.path.getsize(file))
+            progress, bar = get_progress_bar('Uploading', os.path.basename(file), os.path.getsize(file))
             name = '.'.join(os.path.basename(file).split('.')[:-1])
             thumb = None
             try:
@@ -75,15 +75,17 @@ class Client(TelegramClient):
                     attributes = [DocumentAttributeFilename(file)]
                 else:
                     attributes = get_file_attributes(file)
-                message = self.send_file(entity, file, thumb=thumb,
-                                         caption=file_caption, force_document=force_file,
-                                         progress_callback=progress, attributes=attributes)
+                try:
+                    message = self.send_file(entity, file, thumb=thumb,
+                                             caption=file_caption, force_document=force_file,
+                                             progress_callback=progress, attributes=attributes)
+                finally:
+                    bar.render_finish()
             except Exception:
                 raise
             finally:
                 if thumb:
                     os.remove(thumb)
-            click.echo()
             if print_file_id:
                 click.echo('Uploaded successfully "{}" (file_id {})'.format(file, pack_bot_file_id(message.media)))
             if delete_on_success:
@@ -110,11 +112,13 @@ class Client(TelegramClient):
                         filename, sizeof_fmt(message.document.size - free_disk_usage())
                     )
                 )
-            progress = get_progress_bar('Downloading', filename, message.document.size)
-            self.download_media(message, progress_callback=progress)
+            progress, bar = get_progress_bar('Downloading', filename, message.document.size)
+            try:
+                self.download_media(message, progress_callback=progress)
+            finally:
+                bar.render_finish()
             if delete_on_success:
                 self.delete_messages(entity, [message])
-            print()
 
     def forward_to(self, message, destinations):
         for destination in destinations:
