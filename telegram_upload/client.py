@@ -86,8 +86,6 @@ class Client(TelegramClient):
                                 message.media.document.size, file_size))
                 finally:
                     bar.render_finish()
-            except Exception:
-                raise
             finally:
                 if thumb:
                     os.remove(thumb)
