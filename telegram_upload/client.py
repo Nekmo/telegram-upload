@@ -60,7 +60,7 @@ class Client(TelegramClient):
                              first_name=first_name, last_name=last_name, max_attempts=max_attempts)
 
     def send_files(self, entity, files, delete_on_success=False, print_file_id=False,
-                   force_file=False, forward=(), caption=None , stream = False):
+                   force_file=False, forward=(), caption=None):
         for file in files:
             progress = get_progress_bar('Uploading', os.path.basename(file), os.path.getsize(file))
             name = '.'.join(os.path.basename(file).split('.')[:-1])
@@ -77,8 +77,7 @@ class Client(TelegramClient):
                     attributes = get_file_attributes(file)
                 message = self.send_file(entity, file, thumb=thumb,
                                          caption=file_caption, force_document=force_file,
-                                         progress_callback=progress, attributes=attributes , 
-                                         supports_streaming=stream)
+                                         progress_callback=progress, attributes=attributes)
             except Exception:
                 raise
             finally:
