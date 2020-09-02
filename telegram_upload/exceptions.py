@@ -36,6 +36,10 @@ class TelegramUploadNoSpaceError(TelegramUploadError):
     error_code = 28
 
 
+class TelegramUploadDataLoss(TelegramUploadError):
+    error_code = 29
+
+
 def catch(fn):
     def wrap(*args, **kwargs):
         try:

@@ -10,7 +10,7 @@ import os
 from telethon.tl.types import Message, DocumentAttributeFilename
 from telethon.utils import pack_bot_file_id
 
-from telegram_upload.exceptions import ThumbError, TelegramUploadNoSpaceError
+from telegram_upload.exceptions import ThumbError, TelegramUploadDataLoss, TelegramUploadNoSpaceError
 from telegram_upload.files import get_file_attributes, get_file_thumb
 from telethon.version import __version__ as telethon_version
 from telethon import TelegramClient
@@ -62,7 +62,8 @@ class Client(TelegramClient):
     def send_files(self, entity, files, delete_on_success=False, print_file_id=False,
                    force_file=False, forward=(), caption=None):
         for file in files:
-            progress, bar = get_progress_bar('Uploading', os.path.basename(file), os.path.getsize(file))
+            file_size = os.path.getsize(file)
+            progress, bar = get_progress_bar('Uploading', os.path.basename(file), file_size)
             name = '.'.join(os.path.basename(file).split('.')[:-1])
             thumb = None
             try:
@@ -79,6 +80,10 @@ class Client(TelegramClient):
                     message = self.send_file(entity, file, thumb=thumb,
                                              caption=file_caption, force_document=force_file,
                                              progress_callback=progress, attributes=attributes)
+                    if hasattr(message.media, 'document') and file_size != message.media.document.size:
+                        raise TelegramUploadDataLoss(
+                            'Remote document size: {} bytes (local file size: {} bytes)'.format(
+                                message.media.document.size, file_size))
                 finally:
                     bar.render_finish()
             except Exception:
