@@ -28,7 +28,10 @@ DIRECTORY_MODES = {
 @click.option('--directories', default='fail', type=click.Choice(list(DIRECTORY_MODES.keys())),
               help='Action to take with the folders. By default an error is caused.')
 @click.option('--caption', type=str, help='Change file description. By default the file name.')
-def upload(files, to, config, delete_on_success, print_file_id, force_file, forward, caption, directories):
+@click.option('--no-thumbnail', is_flag=True, help='Disable thumbnail generation. For some known file formats, '
+                                                   'Telegram may still generate a thumbnail or show a preview.')
+def upload(files, to, config, delete_on_success, print_file_id, force_file, forward, caption, directories,
+           no_thumbnail):
     """Upload one or more files to Telegram using your personal account.
     The maximum file size is 1.5 GiB and by default they will be saved in
     your saved messages.
@@ -39,7 +42,7 @@ def upload(files, to, config, delete_on_success, print_file_id, force_file, forw
     if directories == 'fail':
         # Validate now
         files = list(files)
-    client.send_files(to, files, delete_on_success, print_file_id, force_file, forward, caption)
+    client.send_files(to, files, delete_on_success, print_file_id, force_file, forward, caption, no_thumbnail)
 
 
 @click.command()
