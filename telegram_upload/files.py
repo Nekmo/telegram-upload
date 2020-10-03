@@ -3,9 +3,12 @@ import os
 
 import mimetypes
 
+from hachoir.metadata.video import MP4Metadata
+from telethon.tl.types import DocumentAttributeVideo
+
 from telegram_upload.exceptions import TelegramInvalidFile
 from telegram_upload.utils import scantree
-from telegram_upload.video import DocumentAttributeStreamVideo, get_video_thumb, video_metadata
+from telegram_upload.video import get_video_thumb, video_metadata
 
 mimetypes.init()
 
@@ -26,10 +29,13 @@ def get_file_attributes(file):
             meta_groups = metadata._MultipleMetadata__groups
         if not metadata.has('width') and meta_groups:
             video_meta = meta_groups[next(filter(lambda x: x.startswith('video'), meta_groups._key_list))]
-        attrs.append(DocumentAttributeStreamVideo(
+        supports_streaming = isinstance(video_meta, MP4Metadata)
+        attrs.append(DocumentAttributeVideo(
             (0, metadata.get('duration').seconds)[metadata.has('duration')],
             (0, video_meta.get('width'))[video_meta.has('width')],
-            (0, video_meta.get('height'))[video_meta.has('height')]
+            (0, video_meta.get('height'))[video_meta.has('height')],
+            False,
+            supports_streaming,
         ))
     return attrs
 

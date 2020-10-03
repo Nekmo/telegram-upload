@@ -1,26 +1,14 @@
 import platform
 import re
-import struct
 import subprocess
 import tempfile
 import os
 
 from hachoir.metadata import extractMetadata
 from hachoir.parser import createParser
-from telethon.tl.types import DocumentAttributeVideo
 
 from telegram_upload.exceptions import ThumbVideoError
 
-
-class DocumentAttributeStreamVideo(DocumentAttributeVideo):
-    def __bytes__(self):
-        return b''.join((
-            b'\xe6,\xf0\x0e',
-            struct.pack('<I', 10),
-            struct.pack('<i', self.duration),
-            struct.pack('<i', self.w),
-            struct.pack('<i', self.h),
-        ))
 
 
 def video_metadata(file):
