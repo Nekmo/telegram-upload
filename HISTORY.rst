@@ -2,6 +2,18 @@
 History
 =======
 
+0.3.4 (2020-10-06)
+------------------
+
+* Issue #59: Stream upload videos
+
+0.3.3 (2020-09-11)
+------------------
+
+* Pull request #54: Finalizing ProgressBar
+* Pull request #55: Verifying document size returned by Telegram
+* Pull request #56: Extra convenience options for no caption and no thumbnail
+
 0.3.3 (2020-09-11)
 ------------------
 
