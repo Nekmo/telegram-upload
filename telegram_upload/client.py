@@ -10,6 +10,7 @@ import os
 from telethon.tl.types import Message, DocumentAttributeFilename
 from telethon.utils import pack_bot_file_id
 
+from telegram_upload.config import SESSION_FILE
 from telegram_upload.exceptions import ThumbError, TelegramUploadDataLoss, TelegramUploadNoSpaceError
 from telegram_upload.files import get_file_attributes, get_file_thumb
 from telethon.version import __version__ as telethon_version
@@ -47,7 +48,8 @@ def truncate(text, max_length):
 class Client(TelegramClient):
     def __init__(self, config_file, **kwargs):
         config = json.load(open(config_file))
-        super().__init__(config.get('session', 'telegram-upload'), config['api_id'], config['api_hash'], **kwargs)
+        super().__init__(config.get('session', SESSION_FILE), config['api_id'], config['api_hash'],
+                         **kwargs)
 
     def start(
             self,
