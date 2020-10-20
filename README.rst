@@ -56,10 +56,9 @@ api_id and api_hash. Bot tokens can not be used with this program (bot uploads a
 
     $ telegram-upload file1.mp4 /path/to/file2.mkv
 
-Credentials are saved in ``~/.config/telegram-upload.json`` and ``telegram-upload.session`` (in the current
-directory). You must make sure that these files are secured. You can copy these files to authenticate
-``telegram-upload`` on more machines, but it is advisable to create a session file for each machine.
-Upload options are available
+Credentials are saved in ``~/.config/telegram-upload.json`` and ``~/.config/telegram-upload.session``. You must make
+sure that these files are secured. You can copy these files to authenticate ``telegram-upload`` on more machines, but
+it is advisable to create a session file for each machine. Upload options are available
 `in the documentation <https://docs.nekmo.org/telegram-upload/usage.html#telegram-upload>`_.
 
 
