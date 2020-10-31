@@ -13,6 +13,9 @@ from telegram_upload.video import get_video_thumb, video_metadata
 mimetypes.init()
 
 
+MAX_FILE_SIZE = (1024 ** 3) * 2
+
+
 def get_file_mime(file):
     return (mimetypes.guess_type(file)[0] or ('')).split('/')[0]
 
@@ -83,3 +86,18 @@ class NoDirectoriesFiles(FilesBase):
                 yield file
 
 
+class LargeFilesBase(FilesBase):
+    def get_iterator(self):
+        for file in self.files:
+            if os.path.getsize(file) > MAX_FILE_SIZE:
+                self.process_large_file(file)
+            else:
+                yield file
+
+    def process_large_file(self, file):
+        raise NotImplementedError
+
+
+class NoLargeFiles(LargeFilesBase):
+    def process_large_file(self, file):
+        raise TelegramInvalidFile('"{}" file is too large for Telegram.'.format(file))

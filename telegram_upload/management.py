@@ -6,11 +6,14 @@ import click
 from telegram_upload.client import Client
 from telegram_upload.config import default_config, CONFIG_FILE
 from telegram_upload.exceptions import catch
-from telegram_upload.files import NoDirectoriesFiles, RecursiveFiles
+from telegram_upload.files import NoDirectoriesFiles, RecursiveFiles, NoLargeFiles
 
 DIRECTORY_MODES = {
     'fail': NoDirectoriesFiles,
     'recursive': RecursiveFiles,
+}
+LARGE_FILE_MODES = {
+    'fail': NoLargeFiles,
 }
 
 
@@ -26,11 +29,15 @@ DIRECTORY_MODES = {
 @click.option('-f', '--forward', multiple=True, help='Forward the file to a chat (alias or id) or user (username, '
                                                      'mobile or id). This option can be used multiple times.')
 @click.option('--directories', default='fail', type=click.Choice(list(DIRECTORY_MODES.keys())),
-              help='Action to take with the folders. By default an error is caused.')
+              help='Defines how to process directories. By default directories are not accepted and will raise an '
+                   'error.')
+@click.option('--large-files', default='fail', type=click.Choice(list(LARGE_FILE_MODES.keys())),
+              help='Defines how to process large files unsupported for Telegram. By default large files are not '
+                   'accepted and will raise an error.')
 @click.option('--caption', type=str, help='Change file description. By default the file name.')
 @click.option('--no-thumbnail', is_flag=True, help='Disable thumbnail generation. For some known file formats, '
                                                    'Telegram may still generate a thumbnail or show a preview.')
-def upload(files, to, config, delete_on_success, print_file_id, force_file, forward, caption, directories,
+def upload(files, to, config, delete_on_success, print_file_id, force_file, forward, directories, large_files, caption,
            no_thumbnail):
     """Upload one or more files to Telegram using your personal account.
     The maximum file size is 1.5 GiB and by default they will be saved in
@@ -40,6 +47,10 @@ def upload(files, to, config, delete_on_success, print_file_id, force_file, forw
     client.start()
     files = DIRECTORY_MODES[directories](files)
     if directories == 'fail':
+        # Validate now
+        files = list(files)
+    files = LARGE_FILE_MODES[large_files](files)
+    if large_files == 'fail':
         # Validate now
         files = list(files)
     client.send_files(to, files, delete_on_success, print_file_id, force_file, forward, caption, no_thumbnail)
