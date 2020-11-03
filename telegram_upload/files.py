@@ -1,7 +1,10 @@
+import math
 import os
 
 
 import mimetypes
+from io import FileIO
+from typing import Union
 
 from hachoir.metadata.video import MP4Metadata
 from telethon.tl.types import DocumentAttributeVideo
@@ -13,7 +16,7 @@ from telegram_upload.video import get_video_thumb, video_metadata
 mimetypes.init()
 
 
-MAX_FILE_SIZE = (1024 ** 3) * 2
+MAX_FILE_SIZE = 2097152000
 
 
 def get_file_mime(file):
@@ -90,7 +93,7 @@ class LargeFilesBase(FilesBase):
     def get_iterator(self):
         for file in self.files:
             if os.path.getsize(file) > MAX_FILE_SIZE:
-                self.process_large_file(file)
+                yield from self.process_large_file(file)
             else:
                 yield file
 
@@ -101,3 +104,48 @@ class LargeFilesBase(FilesBase):
 class NoLargeFiles(LargeFilesBase):
     def process_large_file(self, file):
         raise TelegramInvalidFile('"{}" file is too large for Telegram.'.format(file))
+
+
+class File:
+    @property
+    def file_name(self):
+        raise NotImplementedError
+
+    @property
+    def file_size(self):
+        raise NotImplementedError
+
+
+class SplitFile(File, FileIO):
+    def __init__(self, file: Union[str, bytes, int], max_read_size: int, name: str):
+        super().__init__(file)
+        self.max_read_size = max_read_size
+        self.remaining_size = max_read_size
+        self._name = name
+
+    def read(self, size: int = -1) -> bytes:
+        if size == -1:
+            size = self.remaining_size
+        self.remaining_size -= size
+        return super().read(size)
+
+    def readall(self) -> bytes:
+        return self.read()
+
+    @property
+    def file_name(self):
+        return self._name
+
+    @property
+    def file_size(self):
+        return self.max_read_size
+
+
+class SplitFiles(LargeFilesBase):
+    def process_large_file(self, file):
+        parts = math.ceil(os.path.getsize(file) / MAX_FILE_SIZE)
+        zfill = int(math.log10(10)) + 1
+        for part in range(parts):
+            splitted_file = SplitFile(file, MAX_FILE_SIZE, '{}.{}'.format(file, str(part).zfill(zfill)))
+            splitted_file.seek(MAX_FILE_SIZE * part)
+            yield splitted_file

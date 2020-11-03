@@ -12,7 +12,7 @@ from telethon.utils import pack_bot_file_id
 
 from telegram_upload.config import SESSION_FILE
 from telegram_upload.exceptions import ThumbError, TelegramUploadDataLoss, TelegramUploadNoSpaceError
-from telegram_upload.files import get_file_attributes, get_file_thumb
+from telegram_upload.files import get_file_attributes, get_file_thumb, File
 from telethon.version import __version__ as telethon_version
 from telethon import TelegramClient
 
@@ -64,24 +64,29 @@ class Client(TelegramClient):
     def send_files(self, entity, files, delete_on_success=False, print_file_id=False,
                    force_file=False, forward=(), caption=None, no_thumbnail=False):
         for file in files:
-            file_name = os.path.basename(file)
-            file_size = os.path.getsize(file)
+            if isinstance(file, File):
+                name = file_name = file.file_name
+                file_size = file.file_size
+            else:
+                file_name = os.path.basename(file)
+                file_size = os.path.getsize(file)
+                name = '.'.join(file_name.split('.')[:-1])
+            name = name.split('/')[-1]
             progress, bar = get_progress_bar('Uploading', file_name, file_size)
-            name = '.'.join(file_name.split('.')[:-1])
             thumb = None
-            if not no_thumbnail:
+            if not no_thumbnail and not isinstance(file, File):
                 try:
                     thumb = get_file_thumb(file)
                 except ThumbError as e:
                     click.echo('{}'.format(e), err=True)
             file_caption = truncate(caption if caption is not None else name, CAPTION_MAX_LENGTH)
             try:
-                if force_file:
+                if force_file or isinstance(file, File):
                     attributes = [DocumentAttributeFilename(file_name)]
                 else:
                     attributes = get_file_attributes(file)
                 try:
-                    message = self.send_file(entity, file, thumb=thumb,
+                    message = self.send_file(entity, file, thumb=thumb, file_size=file_size,
                                              caption=file_caption, force_document=force_file,
                                              progress_callback=progress, attributes=attributes)
                     if hasattr(message.media, 'document') and file_size != message.media.document.size:

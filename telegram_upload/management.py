@@ -6,7 +6,7 @@ import click
 from telegram_upload.client import Client
 from telegram_upload.config import default_config, CONFIG_FILE
 from telegram_upload.exceptions import catch
-from telegram_upload.files import NoDirectoriesFiles, RecursiveFiles, NoLargeFiles
+from telegram_upload.files import NoDirectoriesFiles, RecursiveFiles, NoLargeFiles, SplitFiles
 
 DIRECTORY_MODES = {
     'fail': NoDirectoriesFiles,
@@ -14,6 +14,7 @@ DIRECTORY_MODES = {
 }
 LARGE_FILE_MODES = {
     'fail': NoLargeFiles,
+    'split': SplitFiles,
 }
 
 
