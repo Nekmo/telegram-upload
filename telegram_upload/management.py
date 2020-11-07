@@ -41,7 +41,7 @@ LARGE_FILE_MODES = {
 def upload(files, to, config, delete_on_success, print_file_id, force_file, forward, directories, large_files, caption,
            no_thumbnail):
     """Upload one or more files to Telegram using your personal account.
-    The maximum file size is 1.5 GiB and by default they will be saved in
+    The maximum file size is 2 GiB and by default they will be saved in
     your saved messages.
     """
     client = Client(config or default_config())
