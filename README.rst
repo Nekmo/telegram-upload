@@ -78,7 +78,7 @@ download files on your computer away from home.
 Features
 ========
 
-* Upload multiples files (up to 1.5GiB per file)
+* Upload multiples files (up to 2GiB per file)
 * Download files.
 * Add video thumbs.
 * Delete local or remote file on success.
