@@ -67,6 +67,7 @@ class Client(TelegramClient):
             if isinstance(file, File):
                 name = file_name = file.file_name
                 file_size = file.file_size
+                force_file = True
             else:
                 file_name = os.path.basename(file)
                 file_size = os.path.getsize(file)

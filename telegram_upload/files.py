@@ -3,7 +3,7 @@ import os
 
 
 import mimetypes
-from io import FileIO
+from io import FileIO, SEEK_SET
 from typing import Union
 
 from hachoir.metadata.video import MP4Metadata
@@ -126,6 +126,9 @@ class SplitFile(File, FileIO):
     def read(self, size: int = -1) -> bytes:
         if size == -1:
             size = self.remaining_size
+        if not self.remaining_size:
+            return b''
+        size = min(self.remaining_size, size)
         self.remaining_size -= size
         return super().read(size)
 
@@ -140,12 +143,20 @@ class SplitFile(File, FileIO):
     def file_size(self):
         return self.max_read_size
 
+    def seek(self, offset: int, whence: int = SEEK_SET, split_seek: bool = False) -> int:
+        if not split_seek:
+            self.remaining_size += self.tell() - offset
+        return super().seek(offset, whence)
+
 
 class SplitFiles(LargeFilesBase):
     def process_large_file(self, file):
-        parts = math.ceil(os.path.getsize(file) / MAX_FILE_SIZE)
+        file_name = os.path.basename(file)
+        total_size = os.path.getsize(file)
+        parts = math.ceil(total_size / MAX_FILE_SIZE)
         zfill = int(math.log10(10)) + 1
         for part in range(parts):
-            splitted_file = SplitFile(file, MAX_FILE_SIZE, '{}.{}'.format(file, str(part).zfill(zfill)))
-            splitted_file.seek(MAX_FILE_SIZE * part)
+            size = total_size - (part * MAX_FILE_SIZE) if part >= parts - 1 else MAX_FILE_SIZE
+            splitted_file = SplitFile(file, size, '{}.{}'.format(file_name, str(part).zfill(zfill)))
+            splitted_file.seek(MAX_FILE_SIZE * part, split_seek=True)
             yield splitted_file
