@@ -87,7 +87,8 @@ class Client(TelegramClient):
                 else:
                     attributes = get_file_attributes(file)
                 try:
-                    message = self.send_file(entity, file, thumb=thumb, file_size=file_size,
+                    message = self.send_file(entity, file, thumb=thumb,
+                                             file_size=file_size if isinstance(file, File) else None,
                                              caption=file_caption, force_document=force_file,
                                              progress_callback=progress, attributes=attributes)
                     if hasattr(message.media, 'document') and file_size != message.media.document.size:
