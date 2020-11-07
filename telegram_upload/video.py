@@ -6,9 +6,12 @@ import os
 
 from hachoir.metadata import extractMetadata
 from hachoir.parser import createParser
+from hachoir.core import config as hachoir_config
 
 from telegram_upload.exceptions import ThumbVideoError
 
+
+hachoir_config.quiet = True
 
 
 def video_metadata(file):
