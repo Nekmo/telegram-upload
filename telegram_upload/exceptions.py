@@ -40,6 +40,10 @@ class TelegramUploadDataLoss(TelegramUploadError):
     error_code = 29
 
 
+class TelegramProxyError(TelegramUploadError):
+    error_code = 30
+
+
 def catch(fn):
     def wrap(*args, **kwargs):
         try:

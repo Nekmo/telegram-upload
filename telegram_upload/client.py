@@ -3,6 +3,7 @@ import json
 import re
 from distutils.version import StrictVersion
 from typing import Iterable
+from urllib.parse import urlparse
 
 import click
 import os
@@ -11,7 +12,8 @@ from telethon.tl.types import Message, DocumentAttributeFilename
 from telethon.utils import pack_bot_file_id
 
 from telegram_upload.config import SESSION_FILE
-from telegram_upload.exceptions import ThumbError, TelegramUploadDataLoss, TelegramUploadNoSpaceError
+from telegram_upload.exceptions import ThumbError, TelegramUploadDataLoss, TelegramUploadNoSpaceError, \
+    TelegramProxyError
 from telegram_upload.files import get_file_attributes, get_file_thumb, File
 from telethon.version import __version__ as telethon_version
 from telethon import TelegramClient
@@ -23,6 +25,11 @@ if StrictVersion(telethon_version) >= StrictVersion('1.0'):
 
 
 CAPTION_MAX_LENGTH = 200
+PROXY_ENVIRONMENT_VARIABLE_NAMES = [
+    'TELEGRAM_UPLOAD_PROXY',
+    'HTTPS_PROXY',
+    'HTTP_PROXY',
+]
 
 
 def phone_match(value):
@@ -45,11 +52,40 @@ def truncate(text, max_length):
     return (text[:max_length - 3] + '...') if len(text) > max_length else text
 
 
+def get_proxy_environment_variable():
+    for env_name in PROXY_ENVIRONMENT_VARIABLE_NAMES:
+        if env_name in os.environ:
+            return os.environ[env_name]
+
+
+def parse_proxy_string(proxy: str):
+    import socks
+    proxy_parsed = urlparse(proxy)
+    # if ':' not in proxy_parsed.netloc:
+    #     raise TelegramProxyError('Port is required for proxy')
+    # address, port = proxy_parsed.netloc.rsplit(':', 1)
+    # if not port.isdigit():
+    #     raise TelegramProxyError('{} is not a port number'.format(port))
+    # port = int(port)
+    proxy_type = {
+        'http': socks.HTTP,
+        'socks4': socks.SOCKS4,
+        'socks5': socks.SOCKS5,
+    }.get(proxy_parsed.scheme)
+    if proxy_type is None:
+        raise TelegramProxyError('Unsupported proxy type: {}'.format(proxy_parsed.scheme))
+    return (proxy_type, proxy_parsed.hostname, proxy_parsed.port, True,
+            proxy_parsed.username, proxy_parsed.password)
+
+
 class Client(TelegramClient):
     def __init__(self, config_file, **kwargs):
         config = json.load(open(config_file))
+        proxy = get_proxy_environment_variable()
+        if proxy:
+            proxy = parse_proxy_string(proxy)
         super().__init__(config.get('session', SESSION_FILE), config['api_id'], config['api_hash'],
-                         **kwargs)
+                         proxy=proxy, **kwargs)
 
     def start(
             self,
