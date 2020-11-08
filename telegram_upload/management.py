@@ -38,13 +38,16 @@ LARGE_FILE_MODES = {
 @click.option('--caption', type=str, help='Change file description. By default the file name.')
 @click.option('--no-thumbnail', is_flag=True, help='Disable thumbnail generation. For some known file formats, '
                                                    'Telegram may still generate a thumbnail or show a preview.')
+@click.option('-p', '--proxy', default=None,
+              help='Use an http proxy, socks4, socks5 or mtproxy. For example socks5://user:pass@1.2.3.4:8080 '
+                   'for socks5 and mtproxy://secret@1.2.3.4:443 for mtproxy.')
 def upload(files, to, config, delete_on_success, print_file_id, force_file, forward, directories, large_files, caption,
-           no_thumbnail):
+           no_thumbnail, proxy):
     """Upload one or more files to Telegram using your personal account.
     The maximum file size is 2 GiB and by default they will be saved in
     your saved messages.
     """
-    client = Client(config or default_config())
+    client = Client(config or default_config(), proxy=proxy)
     client.start()
     files = DIRECTORY_MODES[directories](files)
     if directories == 'fail':
@@ -63,13 +66,16 @@ def upload(files, to, config, delete_on_success, print_file_id, force_file, forw
 @click.option('--config', default=None, help='Configuration file to use. By default "{}".'.format(CONFIG_FILE))
 @click.option('-d', '--delete-on-success', is_flag=True,
               help='Delete telegram message after successful download. Useful for creating a download queue.')
-def download(from_, config, delete_on_success):
+@click.option('-p', '--proxy', default=None,
+              help='Use an http proxy, socks4, socks5 or mtproxy. For example socks5://user:pass@1.2.3.4:8080 '
+                   'for socks5 and mtproxy://secret@1.2.3.4:443 for mtproxy.')
+def download(from_, config, delete_on_success, proxy):
     """Download all the latest messages that are files in a chatt, by default download
     from "saved messages". It is recommended to forward the files to download to
     "saved messages" and use parameter ``--delete-on-success``. Forwarded messages will
     be removed from the chat after downloading, such as a download queue.
     """
-    client = Client(config or default_config())
+    client = Client(config or default_config(), proxy=proxy)
     client.start()
     messages = client.find_files(from_)
     client.download_files(from_, messages, delete_on_success)
