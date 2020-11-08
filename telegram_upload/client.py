@@ -8,6 +8,7 @@ from urllib.parse import urlparse
 import click
 import os
 
+from telethon.network import ConnectionTcpMTProxyRandomizedIntermediate
 from telethon.tl.types import Message, DocumentAttributeFilename
 from telethon.utils import pack_bot_file_id
 
@@ -59,12 +60,13 @@ def get_proxy_environment_variable():
 
 
 def parse_proxy_string(proxy: Union[str, None]):
-    import socks
     if not proxy:
         return None
     proxy_parsed = urlparse(proxy)
     if not proxy_parsed.scheme or not proxy_parsed.hostname or not proxy_parsed.port:
         raise TelegramProxyError('Malformed proxy address: {}'.format(proxy))
+    if proxy_parsed.scheme == 'mtproxy':
+        return ('mtproxy', proxy_parsed.hostname, proxy_parsed.port, proxy_parsed.username)
     proxy_type = {
         'http': socks.HTTP,
         'socks4': socks.SOCKS4,
@@ -82,6 +84,9 @@ class Client(TelegramClient):
         proxy = get_proxy_environment_variable()
         if proxy:
             proxy = parse_proxy_string(proxy)
+        if proxy[0] == 'mtproxy':
+            proxy = proxy[1:]
+            kwargs['connection'] = ConnectionTcpMTProxyRandomizedIntermediate
         super().__init__(config.get('session', SESSION_FILE), config['api_id'], config['api_hash'],
                          proxy=proxy, **kwargs)
 
