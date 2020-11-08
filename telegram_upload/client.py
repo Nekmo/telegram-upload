@@ -2,7 +2,7 @@ import getpass
 import json
 import re
 from distutils.version import StrictVersion
-from typing import Iterable
+from typing import Iterable, Union
 from urllib.parse import urlparse
 
 import click
@@ -58,15 +58,13 @@ def get_proxy_environment_variable():
             return os.environ[env_name]
 
 
-def parse_proxy_string(proxy: str):
+def parse_proxy_string(proxy: Union[str, None]):
     import socks
+    if not proxy:
+        return None
     proxy_parsed = urlparse(proxy)
-    # if ':' not in proxy_parsed.netloc:
-    #     raise TelegramProxyError('Port is required for proxy')
-    # address, port = proxy_parsed.netloc.rsplit(':', 1)
-    # if not port.isdigit():
-    #     raise TelegramProxyError('{} is not a port number'.format(port))
-    # port = int(port)
+    if not proxy_parsed.scheme or not proxy_parsed.hostname or not proxy_parsed.port:
+        raise TelegramProxyError('Malformed proxy address: {}'.format(proxy))
     proxy_type = {
         'http': socks.HTTP,
         'socks4': socks.SOCKS4,
