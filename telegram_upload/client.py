@@ -67,6 +67,11 @@ def parse_proxy_string(proxy: Union[str, None]):
         raise TelegramProxyError('Malformed proxy address: {}'.format(proxy))
     if proxy_parsed.scheme == 'mtproxy':
         return ('mtproxy', proxy_parsed.hostname, proxy_parsed.port, proxy_parsed.username)
+    try:
+        import socks
+    except ImportError:
+        raise TelegramProxyError('pysocks module is required for use HTTP/socks proxies. '
+                                 'Install it using: pip install pysocks')
     proxy_type = {
         'http': socks.HTTP,
         'socks4': socks.SOCKS4,
