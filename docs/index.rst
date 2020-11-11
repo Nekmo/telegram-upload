@@ -21,9 +21,11 @@ Contents
    installation
    readme
    usage
+   troubleshooting
    contributing
    authors
    history
+
 
 ..
    _ modules
