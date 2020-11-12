@@ -21,7 +21,7 @@ Telegram-upload session can be run at a time.
 1. Copy the session file (``~/.config/telegram-upload.session``) to another path.
 2. Copy the configuration file (``~/.config/telegram-upload.json``) to another path.
 3. Edit this file and add the path to session file like this: ``{"api_id": 0, "api_hash":
-   "...", "session": "/path/to/telegram-upload.json"}``
+   "...", "session": "/path/to/telegram-upload.json"}``.
 4. Run using ``--config /path/to/telegram-upload.json``.
 
 If you are sure that Telegram-upload is not running, search for the process that is blocking the file::
