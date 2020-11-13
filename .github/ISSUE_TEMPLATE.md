@@ -1,6 +1,7 @@
 * telegram-upload version:
 * Python version:
 * Operating System:
+* Dependencies list (run `pip freeze`):
 
 ### Description
 
