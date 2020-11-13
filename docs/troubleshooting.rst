@@ -29,3 +29,21 @@ If you are sure that Telegram-upload is not running, search for the process that
     fuser ~/.config/telegram-upload.session
 
 As a last resort, you can restart your machine.
+
+
+Telegram-upload does not work! An error occurs when executing it
+-----------------------------------------------------------------
+Telegram-upload is not tested with all versions of all dependencies it uses. If you have installed Telegram-upload
+on your system (using root) maybe some existing dependency is on an incompatible version. You can try updating the
+dependencies carefully::
+
+    $ pip install -U telegram-upload Telethon hachoir cryptg click
+
+To avoid errors it is recommended to use `virtualenvs <https://docs.python-guide.org/dev/virtualenvs/>`_.
+
+Before asking for help, remember to find out if `the issue already exists <https://github
+.com/Nekmo/telegram-upload/issues>`_. If you open a ticket remember to paste your system dependencies on the issue::
+
+    $ pip freeze
+
+Some problems may not be related to Telegram-upload. If possible, `Google before asking <https://google.com/>`_.
