@@ -6,7 +6,7 @@ from unittest.mock import patch, mock_open, sentinel, Mock
 import socks
 from telethon.tl.types import DocumentAttributeFilename
 
-from telegram_upload.client import Client, parse_proxy_string
+from telegram_upload.client import Client, parse_proxy_string, phone_match
 from telegram_upload.exceptions import TelegramUploadDataLoss, TelegramUploadNoSpaceError, TelegramProxyError
 
 CONFIG_DATA = {'api_hash': '', 'api_id': ''}
@@ -18,6 +18,16 @@ class AnyArg(object):
     """https://stackoverflow.com/questions/20428750/pythons-assert-called-with-is-there-a-wildcard-character"""
     def __eq__(a, b):
         return True
+
+
+class TestPhoneMatch(unittest.TestCase):
+    def test_not_valid_phone(self):
+        with self.assertRaises(ValueError):
+            phone_match('foo')
+
+    def test_number(self):
+        number = '+34612345678'
+        self.assertEqual(phone_match(number), number)
 
 
 class TestParseProxyString(unittest.TestCase):
