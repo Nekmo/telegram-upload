@@ -3,8 +3,10 @@ import os
 import unittest
 from unittest.mock import patch, mock_open, sentinel, Mock
 
+from telethon.tl.types import DocumentAttributeFilename
+
 from telegram_upload.client import Client
-from telegram_upload.exceptions import TelegramUploadDataLoss
+from telegram_upload.exceptions import TelegramUploadDataLoss, TelegramUploadNoSpaceError
 
 CONFIG_DATA = {'api_hash': '', 'api_id': ''}
 
@@ -39,3 +41,17 @@ class TestClient(unittest.TestCase):
         self.client.send_file.return_value.media.document.size = 200
         with self.assertRaises(TelegramUploadDataLoss):
             self.client.send_files('foo', [self.upload_file_path])
+
+    def test_download_files(self):
+        m = Mock()
+        m.document.attributes = [DocumentAttributeFilename('download.png')]
+        m.document.size = 0
+        self.client.download_files('foo', [m])
+
+    def test_no_space_error(self):
+        m = Mock()
+        m.document.attributes = [DocumentAttributeFilename('download.png')]
+        m.document.size = 1000
+        with patch('telegram_upload.client.free_disk_usage', return_value=0), \
+            self.assertRaises(TelegramUploadNoSpaceError):
+            self.client.download_files('foo', [m])
