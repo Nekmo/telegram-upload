@@ -3,3 +3,4 @@ bumpversion
 sphinx-click
 tox>=1.8
 codecov
+pysocks
