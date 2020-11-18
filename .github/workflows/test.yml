@@ -30,3 +30,4 @@ jobs:
     - name: Test with coverage
       run: |
           coverage run -m unittest discover
+          codecov
