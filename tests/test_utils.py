@@ -6,7 +6,7 @@ from telegram_upload.utils import sizeof_fmt, scantree
 
 class TestSizeOfFmt(unittest.TestCase):
     def test_bytes(self):
-        self.assertEqual(sizeof_fmt(1023), '1023B')
+        self.assertEqual(sizeof_fmt(1023), '1023.0B')
 
     def test_kibibytes(self):
         self.assertEqual(sizeof_fmt(2400), '2.3KiB')
