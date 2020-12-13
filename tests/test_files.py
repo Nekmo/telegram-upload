@@ -3,7 +3,7 @@ from unittest.mock import patch, Mock
 
 from telegram_upload.exceptions import TelegramInvalidFile
 from telegram_upload.files import get_file_attributes, RecursiveFiles, NoDirectoriesFiles, MAX_FILE_SIZE, \
-    NoLargeFiles
+    NoLargeFiles, SplitFiles
 
 
 class TestGetFileAttributes(unittest.TestCase):
@@ -63,3 +63,18 @@ class TestNoLargeFiles(unittest.TestCase):
     def test_big_file(self, m):
         with self.assertRaises(TelegramInvalidFile):
             next(NoLargeFiles(['foo']))
+
+
+class TestSplitFiles(unittest.TestCase):
+    @patch('telegram_upload.files.os.path.getsize', return_value=MAX_FILE_SIZE - 1)
+    def test_small_file(self, m):
+        self.assertEqual(list(SplitFiles(['foo'])), ['foo'])
+
+    @patch('telegram_upload.files.os.path.getsize', return_value=MAX_FILE_SIZE + 1000)
+    @patch('telegram_upload.files.SplitFile.__init__', return_value=None)
+    @patch('telegram_upload.files.SplitFile.seek')
+    def test_big_file(self, m_getsize, m_init, m_seek):
+        files = list(SplitFiles(['foo']))
+        self.assertEqual(len(files), 2)
+        self.assertEqual(m_init.call_args_list[0][0], ('foo', MAX_FILE_SIZE, 'foo.00'))
+        self.assertEqual(m_init.call_args_list[1][0], ('foo', 1000, 'foo.01'))
