@@ -1,7 +1,8 @@
 import unittest
 from unittest.mock import patch, Mock
 
-from telegram_upload.files import get_file_attributes, RecursiveFiles
+from telegram_upload.exceptions import TelegramInvalidFile
+from telegram_upload.files import get_file_attributes, RecursiveFiles, NoDirectoriesFiles
 
 
 class TestGetFileAttributes(unittest.TestCase):
@@ -38,3 +39,15 @@ class TestRecursiveFiles(unittest.TestCase):
         side_effect = [file] * 3
         m2.return_value = side_effect
         self.assertEqual(list(RecursiveFiles(['foo'])), [x.path for x in side_effect])
+
+
+class TestNoDirectoriesFiles(unittest.TestCase):
+    @patch('telegram_upload.files.scantree', return_value=[])
+    @patch('telegram_upload.files.os.path.isdir', return_value=False)
+    def test_one_file(self, m1, m2):
+        self.assertEqual(list(NoDirectoriesFiles(['foo'])), ['foo'])
+
+    @patch('telegram_upload.files.os.path.isdir', return_value=True)
+    def test_directory(self, m):
+        with self.assertRaises(TelegramInvalidFile):
+            next(NoDirectoriesFiles(['foo']))
