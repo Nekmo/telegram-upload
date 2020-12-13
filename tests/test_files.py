@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch, Mock
 
-from telegram_upload.files import get_file_attributes
+from telegram_upload.files import get_file_attributes, RecursiveFiles
 
 
 class TestGetFileAttributes(unittest.TestCase):
@@ -20,3 +20,21 @@ class TestGetFileAttributes(unittest.TestCase):
         self.assertEqual(attrs[0].w, 1920)
         self.assertEqual(attrs[0].h, 1080)
         self.assertEqual(attrs[0].duration, 1000)
+
+
+class TestRecursiveFiles(unittest.TestCase):
+    @patch('telegram_upload.files.scantree', return_value=[])
+    @patch('telegram_upload.files.os.path.isdir', return_value=False)
+    def test_one_file(self, m1, m2):
+        self.assertEqual(list(RecursiveFiles(['foo'])), ['foo'])
+
+    @patch('telegram_upload.files.scantree')
+    @patch('telegram_upload.files.os.path.isdir', return_value=True)
+    def test_directory(self, m1, m2):
+        directory = Mock()
+        directory.is_dir.side_effect = [True, False]
+        file = Mock()
+        file.is_dir.return_value = False
+        side_effect = [file] * 3
+        m2.return_value = side_effect
+        self.assertEqual(list(RecursiveFiles(['foo'])), [x.path for x in side_effect])
