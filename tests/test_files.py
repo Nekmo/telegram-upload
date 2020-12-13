@@ -2,7 +2,8 @@ import unittest
 from unittest.mock import patch, Mock
 
 from telegram_upload.exceptions import TelegramInvalidFile
-from telegram_upload.files import get_file_attributes, RecursiveFiles, NoDirectoriesFiles
+from telegram_upload.files import get_file_attributes, RecursiveFiles, NoDirectoriesFiles, MAX_FILE_SIZE, \
+    NoLargeFiles
 
 
 class TestGetFileAttributes(unittest.TestCase):
@@ -51,3 +52,14 @@ class TestNoDirectoriesFiles(unittest.TestCase):
     def test_directory(self, m):
         with self.assertRaises(TelegramInvalidFile):
             next(NoDirectoriesFiles(['foo']))
+
+
+class TestNoLargeFiles(unittest.TestCase):
+    @patch('telegram_upload.files.os.path.getsize', return_value=MAX_FILE_SIZE - 1)
+    def test_small_file(self, m):
+        self.assertEqual(list(NoLargeFiles(['foo'])), ['foo'])
+
+    @patch('telegram_upload.files.os.path.getsize', return_value=MAX_FILE_SIZE + 1)
+    def test_big_file(self, m):
+        with self.assertRaises(TelegramInvalidFile):
+            next(NoLargeFiles(['foo']))
