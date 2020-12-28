@@ -1,6 +1,7 @@
 import unittest
+from unittest.mock import patch
 
-from telegram_upload.exceptions import TelegramUploadError
+from telegram_upload.exceptions import TelegramUploadError, catch
 
 
 class TestTelegramUploadError(unittest.TestCase):
@@ -19,3 +20,16 @@ class TestTelegramUploadError(unittest.TestCase):
         error = TelegramUploadError('extra_body')
         error.body = 'body'
         self.assertEqual(str(error), 'TelegramUploadError: body. extra_body')
+
+
+class TestCatch(unittest.TestCase):
+    def test_call(self):
+        self.assertEqual(catch(lambda: 'foo')(), 'foo')
+
+    @patch('telegram_upload.exceptions.sys.stderr.write')
+    def test_raise(self, m):
+        def raise_error():
+            raise TelegramUploadError('Error')
+        with self.assertRaises(SystemExit):
+            catch(raise_error)()
+        m.assert_called_once()

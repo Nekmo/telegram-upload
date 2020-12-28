@@ -47,7 +47,7 @@ class TelegramProxyError(TelegramUploadError):
 def catch(fn):
     def wrap(*args, **kwargs):
         try:
-            fn(*args, **kwargs)
+            return fn(*args, **kwargs)
         except TelegramUploadError as e:
             sys.stderr.write('[Error] telegram-upload Exception:\n{}\n'.format(e))
             exit(e.error_code)
