@@ -5,9 +5,9 @@
 |
 
 
-.. image:: https://img.shields.io/travis/Nekmo/telegram-upload.svg?style=flat-square&maxAge=2592000
-  :target: https://travis-ci.org/Nekmo/telegram-upload
-  :alt: Latest Travis CI build status
+.. image:: https://img.shields.io/github/workflow/status/Nekmo/telegram-upload/Tests.svg?style=flat-square&maxAge=2592000
+  :target: https://github.com/Nekmo/telegram-upload/actions?query=workflow%3ATests
+  :alt: Latest Tests CI build status
 
 .. image:: https://img.shields.io/pypi/v/telegram-upload.svg?style=flat-square
   :target: https://pypi.org/project/telegram-upload/
