@@ -4,8 +4,7 @@ from unittest.mock import patch
 
 from click.testing import CliRunner
 
-from telegram_upload.management import upload
-
+from telegram_upload.management import upload, download
 
 directory = os.path.dirname(os.path.abspath(__file__))
 
@@ -26,3 +25,13 @@ class TestUpload(unittest.TestCase):
         result = runner.invoke(upload, ['missing_file.txt'])
         self.assertEqual(result.exit_code, 1)
         m.return_value.send_files.assert_not_called()
+
+
+class TestDownload(unittest.TestCase):
+    @patch('telegram_upload.management.Client')
+    def test_download(self, m):
+        runner = CliRunner()
+        result = runner.invoke(download, [])
+        self.assertEqual(result.exit_code, 0)
+        m.assert_called_once()
+        m.return_value.download_files.assert_called_once()
