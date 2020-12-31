@@ -18,6 +18,35 @@ LARGE_FILE_MODES = {
 }
 
 
+class MutuallyExclusiveOption(click.Option):
+    def __init__(self, *args, **kwargs):
+        self.mutually_exclusive = set(kwargs.pop('mutually_exclusive', []))
+        help = kwargs.get('help', '')
+        if self.mutually_exclusive:
+            ex_str = ', '.join(self.mutually_exclusive)
+            kwargs['help'] = help + (
+                ' NOTE: This argument is mutually exclusive with '
+                ' arguments: [' + ex_str + '].'
+            )
+        super(MutuallyExclusiveOption, self).__init__(*args, **kwargs)
+
+    def handle_parse_result(self, ctx, opts, args):
+        if self.mutually_exclusive.intersection(opts) and self.name in opts:
+            raise click.UsageError(
+                "Illegal usage: `{}` is mutually exclusive with "
+                "arguments `{}`.".format(
+                    self.name,
+                    ', '.join(self.mutually_exclusive)
+                )
+            )
+
+        return super(MutuallyExclusiveOption, self).handle_parse_result(
+            ctx,
+            opts,
+            args
+        )
+
+
 @click.command()
 @click.argument('files', nargs=-1)
 @click.option('--to', default='me', help='Phone number, username, invite link or "me" (saved messages). '
@@ -36,13 +65,16 @@ LARGE_FILE_MODES = {
               help='Defines how to process large files unsupported for Telegram. By default large files are not '
                    'accepted and will raise an error.')
 @click.option('--caption', type=str, help='Change file description. By default the file name.')
-@click.option('--no-thumbnail', is_flag=True, help='Disable thumbnail generation. For some known file formats, '
-                                                   'Telegram may still generate a thumbnail or show a preview.')
+@click.option('--no-thumbnail', is_flag=True, cls=MutuallyExclusiveOption, mutually_exclusive=["thumbnail_file"],
+              help='Disable thumbnail generation. For some known file formats, Telegram may still generate a '
+                   'thumbnail or show a preview.')
+@click.option('--thumbnail-file', default=None, cls=MutuallyExclusiveOption, mutually_exclusive=["no_thumbnail"],
+              help='Path to the preview file to use for the uploaded file.')
 @click.option('-p', '--proxy', default=None,
               help='Use an http proxy, socks4, socks5 or mtproxy. For example socks5://user:pass@1.2.3.4:8080 '
                    'for socks5 and mtproxy://secret@1.2.3.4:443 for mtproxy.')
 def upload(files, to, config, delete_on_success, print_file_id, force_file, forward, directories, large_files, caption,
-           no_thumbnail, proxy):
+           no_thumbnail, thumbnail_file, proxy):
     """Upload one or more files to Telegram using your personal account.
     The maximum file size is 2 GiB and by default they will be saved in
     your saved messages.
@@ -57,7 +89,13 @@ def upload(files, to, config, delete_on_success, print_file_id, force_file, forw
     if large_files == 'fail':
         # Validate now
         files = list(files)
-    client.send_files(to, files, delete_on_success, print_file_id, force_file, forward, caption, no_thumbnail)
+    if no_thumbnail:
+        thumbnail = False
+    elif thumbnail_file:
+        thumbnail = thumbnail_file
+    else:
+        thumbnail = None
+    client.send_files(to, files, delete_on_success, print_file_id, force_file, forward, caption, thumbnail)
 
 
 @click.command()

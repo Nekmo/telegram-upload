@@ -14,7 +14,7 @@ from telethon.utils import pack_bot_file_id
 
 from telegram_upload.config import SESSION_FILE
 from telegram_upload.exceptions import ThumbError, TelegramUploadDataLoss, TelegramUploadNoSpaceError, \
-    TelegramProxyError
+    TelegramProxyError, TelegramInvalidFile
 from telegram_upload.files import get_file_attributes, get_file_thumb, File
 from telethon.version import __version__ as telethon_version
 from telethon import TelegramClient
@@ -105,7 +105,7 @@ class Client(TelegramClient):
                              first_name=first_name, last_name=last_name, max_attempts=max_attempts)
 
     def send_files(self, entity, files, delete_on_success=False, print_file_id=False,
-                   force_file=False, forward=(), caption=None, no_thumbnail=False):
+                   force_file=False, forward=(), caption=None, thumbnail=None):
         for file in files:
             if isinstance(file, File):
                 name = file_name = file.file_name
@@ -118,11 +118,17 @@ class Client(TelegramClient):
             name = name.split('/')[-1]
             progress, bar = get_progress_bar('Uploading', file_name, file_size)
             thumb = None
-            if not no_thumbnail and not isinstance(file, File):
+            if thumbnail is None and not isinstance(file, File):
                 try:
                     thumb = get_file_thumb(file)
                 except ThumbError as e:
                     click.echo('{}'.format(e), err=True)
+            elif thumbnail is not False:
+                if not isinstance(thumbnail, str):
+                    raise TypeError('Invalid type for thumbnail: {}'.format(type(thumbnail)))
+                elif not os.path.lexists(thumbnail):
+                    raise TelegramInvalidFile('{} thumbnail file does not exists.'.format(thumbnail))
+                thumb = thumbnail
             file_caption = truncate(caption if caption is not None else name, CAPTION_MAX_LENGTH)
             try:
                 if force_file or isinstance(file, File):
