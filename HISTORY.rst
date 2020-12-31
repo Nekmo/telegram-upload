@@ -2,6 +2,24 @@
 History
 =======
 
+0.4.0 (2020-12-31)
+------------------
+
+* Issue #79: Python 3.9 support
+* Issue #74: Help on dependency issues
+* Issue #70: Document streamable file types
+* Issue #68: Silence hachoir warnings ([warn] [/file[0]/uid] ...)
+* Issue #65: Custom Thumbnail For the Files getting Uploaded
+* Issue #43: Write tests
+* Issue #40: Not using system HTTP Proxy
+* Issue #38: Upload to Pypi using Github Actions
+* Issue #36: Database is locked
+* Issue #35: Document send files to a chat_id
+* Issue #13: Change session directory enhancement
+* Issue #11: Change session directory enhancement
+* Issue #3: Split large files (> 2GB)
+
+
 0.3.4 (2020-10-06)
 ------------------
 
