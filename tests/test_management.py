@@ -26,6 +26,13 @@ class TestUpload(unittest.TestCase):
         self.assertEqual(result.exit_code, 1)
         m.return_value.send_files.assert_not_called()
 
+    @patch('telegram_upload.management.Client')
+    def test_exclusive(self, m):
+        runner = CliRunner()
+        result = runner.invoke(upload, ['missing_file.txt', '--thumbnail-file', 'cara128.png', '--no-thumbnail'])
+        self.assertEqual(result.exit_code, 2)
+        m.return_value.send_files.assert_not_called()
+
 
 class TestDownload(unittest.TestCase):
     @patch('telegram_upload.management.Client')

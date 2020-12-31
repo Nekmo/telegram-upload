@@ -23,10 +23,9 @@ class MutuallyExclusiveOption(click.Option):
         self.mutually_exclusive = set(kwargs.pop('mutually_exclusive', []))
         help = kwargs.get('help', '')
         if self.mutually_exclusive:
-            ex_str = ', '.join(self.mutually_exclusive)
             kwargs['help'] = help + (
-                ' NOTE: This argument is mutually exclusive with '
-                ' arguments: [' + ex_str + '].'
+                ' NOTE: This argument is mutually exclusive with'
+                ' arguments: [{}].'.format(self.mutually_exclusive_text)
             )
         super(MutuallyExclusiveOption, self).__init__(*args, **kwargs)
 
@@ -36,7 +35,7 @@ class MutuallyExclusiveOption(click.Option):
                 "Illegal usage: `{}` is mutually exclusive with "
                 "arguments `{}`.".format(
                     self.name,
-                    ', '.join(self.mutually_exclusive)
+                    self.mutually_exclusive_text
                 )
             )
 
@@ -45,6 +44,10 @@ class MutuallyExclusiveOption(click.Option):
             opts,
             args
         )
+
+    @property
+    def mutually_exclusive_text(self):
+        return ', '.join([x.replace('_', '-') for x in self.mutually_exclusive])
 
 
 @click.command()
