@@ -6,7 +6,7 @@ import click
 from telegram_upload.client import Client
 from telegram_upload.config import default_config, CONFIG_FILE
 from telegram_upload.exceptions import catch
-from telegram_upload.files import NoDirectoriesFiles, RecursiveFiles, NoLargeFiles, SplitFiles
+from telegram_upload.files import NoDirectoriesFiles, RecursiveFiles, NoLargeFiles, SplitFiles, is_valid_file
 
 DIRECTORY_MODES = {
     'fail': NoDirectoriesFiles,
@@ -84,6 +84,7 @@ def upload(files, to, config, delete_on_success, print_file_id, force_file, forw
     """
     client = Client(config or default_config(), proxy=proxy)
     client.start()
+    files = filter(lambda file: is_valid_file(file, lambda message: click.echo(message, err=True)), files)
     files = DIRECTORY_MODES[directories](files)
     if directories == 'fail':
         # Validate now

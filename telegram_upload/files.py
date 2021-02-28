@@ -19,6 +19,16 @@ mimetypes.init()
 MAX_FILE_SIZE = 2097152000
 
 
+def is_valid_file(file, errorLogger=None):
+    if not os.path.lexists(file):
+        errorLogger('File "{}" does not exist.'.format(file))
+        return False
+    elif not os.path.getsize(file):
+        errorLogger('File "{}" is empty.'.format(file))
+        return False
+    return True
+
+
 def get_file_mime(file):
     return (mimetypes.guess_type(file)[0] or ('')).split('/')[0]
 
