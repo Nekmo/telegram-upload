@@ -112,7 +112,7 @@ def upload(files, to, config, delete_on_success, print_file_id, force_file, forw
               help='Use an http proxy, socks4, socks5 or mtproxy. For example socks5://user:pass@1.2.3.4:8080 '
                    'for socks5 and mtproxy://secret@1.2.3.4:443 for mtproxy.')
 def download(from_, config, delete_on_success, proxy):
-    """Download all the latest messages that are files in a chatt, by default download
+    """Download all the latest messages that are files in a chat, by default download
     from "saved messages". It is recommended to forward the files to download to
     "saved messages" and use parameter ``--delete-on-success``. Forwarded messages will
     be removed from the chat after downloading, such as a download queue.
