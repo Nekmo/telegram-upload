@@ -14,7 +14,7 @@ from telethon.utils import pack_bot_file_id
 
 from telegram_upload.config import SESSION_FILE
 from telegram_upload.exceptions import ThumbError, TelegramUploadDataLoss, TelegramUploadNoSpaceError, \
-    TelegramProxyError, TelegramInvalidFile
+    TelegramProxyError, TelegramInvalidFile, MissingFileError
 from telegram_upload.files import get_file_attributes, get_file_thumb, File
 from telethon.version import __version__ as telethon_version
 from telethon import TelegramClient
@@ -106,7 +106,9 @@ class Client(TelegramClient):
 
     def send_files(self, entity, files, delete_on_success=False, print_file_id=False,
                    force_file=False, forward=(), caption=None, thumbnail=None):
+        has_files = False
         for file in files:
+            has_files = True
             if isinstance(file, File):
                 name = file_name = file.file_name
                 file_size = file.file_size
@@ -155,6 +157,8 @@ class Client(TelegramClient):
                 click.echo('Deleting "{}"'.format(file))
                 os.remove(file)
             self.forward_to(message, forward)
+        if not has_files:
+            raise MissingFileError('Files do not exist.')
 
     def find_files(self, entity):
         for message in self.iter_messages(entity):

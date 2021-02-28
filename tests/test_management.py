@@ -19,12 +19,10 @@ class TestUpload(unittest.TestCase):
         m.assert_called_once()
         m.return_value.send_files.assert_called_once()
 
-    @patch('telegram_upload.management.Client')
-    def test_failed(self, m):
+    def test_missing_file(self):
         runner = CliRunner()
         result = runner.invoke(upload, ['missing_file.txt'])
         self.assertEqual(result.exit_code, 1)
-        m.return_value.send_files.assert_not_called()
 
     @patch('telegram_upload.management.Client')
     def test_exclusive(self, m):
