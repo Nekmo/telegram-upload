@@ -44,16 +44,17 @@ def get_file_attributes(file):
         if hasattr(metadata, '_MultipleMetadata__groups'):
             # Is mkv
             meta_groups = metadata._MultipleMetadata__groups
-        if not metadata.has('width') and meta_groups:
+        if metadata is not None and not metadata.has('width') and meta_groups:
             video_meta = meta_groups[next(filter(lambda x: x.startswith('video'), meta_groups._key_list))]
-        supports_streaming = isinstance(video_meta, MP4Metadata)
-        attrs.append(DocumentAttributeVideo(
-            (0, metadata.get('duration').seconds)[metadata.has('duration')],
-            (0, video_meta.get('width'))[video_meta.has('width')],
-            (0, video_meta.get('height'))[video_meta.has('height')],
-            False,
-            supports_streaming,
-        ))
+        if metadata is not None:
+            supports_streaming = isinstance(video_meta, MP4Metadata)
+            attrs.append(DocumentAttributeVideo(
+                (0, metadata.get('duration').seconds)[metadata.has('duration')],
+                (0, video_meta.get('width'))[video_meta.has('width')],
+                (0, video_meta.get('height'))[video_meta.has('height')],
+                False,
+                supports_streaming,
+            ))
     return attrs
 
 
