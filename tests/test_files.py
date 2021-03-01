@@ -73,10 +73,13 @@ class TestSplitFile(unittest.TestCase):
         file0 = SplitFile(this_file, size - 100, 'test.py.00')
         file1 = SplitFile(this_file, 100, 'test.py.01')
         file1.seek(size - 100, split_seek=True)
-        content = open(this_file, 'rb').read()
+        with open(this_file, 'rb') as f:
+            content = f.read()
         self.assertEqual(file0.readall() + file1.readall(), content)
         self.assertEqual(file0.file_name, 'test.py.00')
         self.assertEqual(file1.file_size, 100)
+        file0.close()
+        file1.close()
 
 
 class TestSplitFiles(unittest.TestCase):

@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, mock_open
 
 from telegram_upload.config import default_config, CONFIG_FILE
 
@@ -10,6 +10,7 @@ class TestDefaultConfig(unittest.TestCase):
         self.assertEqual(default_config(), CONFIG_FILE)
         self.assertEqual(m.call_count, 1)
 
+    @patch('builtins.open', mock_open())
     @patch('telegram_upload.config.os')
     @patch('telegram_upload.config.click')
     @patch('telegram_upload.config.json')
