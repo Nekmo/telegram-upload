@@ -14,5 +14,6 @@ def default_config():
     click.echo('Go to https://my.telegram.org and create a App in API development tools')
     api_id = click.prompt('Please Enter api_id', type=int)
     api_hash = click.prompt('Now enter api_hash')
-    json.dump({'api_id': api_id, 'api_hash': api_hash}, open(CONFIG_FILE, 'w'))
+    with open(CONFIG_FILE, 'w') as f:
+        json.dump({'api_id': api_id, 'api_hash': api_hash}, f)
     return CONFIG_FILE

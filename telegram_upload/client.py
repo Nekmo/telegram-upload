@@ -85,7 +85,8 @@ def parse_proxy_string(proxy: Union[str, None]):
 
 class Client(TelegramClient):
     def __init__(self, config_file, proxy=None, **kwargs):
-        config = json.load(open(config_file))
+        with open(config_file) as f:
+            config = json.load(f)
         proxy = proxy if proxy is not None else get_proxy_environment_variable()
         proxy = parse_proxy_string(proxy)
         if proxy and proxy[0] == 'mtproxy':
