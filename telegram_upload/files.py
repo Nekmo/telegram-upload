@@ -6,10 +6,11 @@ import mimetypes
 from io import FileIO, SEEK_SET
 from typing import Union
 
+import click
 from hachoir.metadata.video import MP4Metadata
-from telethon.tl.types import DocumentAttributeVideo
+from telethon.tl.types import DocumentAttributeVideo, DocumentAttributeFilename
 
-from telegram_upload.exceptions import TelegramInvalidFile
+from telegram_upload.exceptions import TelegramInvalidFile, ThumbError
 from telegram_upload.utils import scantree
 from telegram_upload.video import get_video_thumb, video_metadata
 
@@ -58,15 +59,24 @@ def get_file_attributes(file):
     return attrs
 
 
+def get_file_document_attributes(file, force_file):
+    if force_file or isinstance(file, File):
+        attributes = [DocumentAttributeFilename(file_name)]
+    else:
+        attributes = get_file_attributes(file)
+
+
 def get_file_thumb(file):
     if get_file_mime(file) == 'video':
         return get_video_thumb(file)
 
 
 class FilesBase:
-    def __init__(self, files):
+    def __init__(self, files, thumbnail: Union[str, bool, None] = None, force_file: bool = False):
         self._iterator = None
         self.files = files
+        self.thumbnail = thumbnail
+        self.force_file = force_file
 
     def get_iterator(self):
         raise NotImplementedError
@@ -107,7 +117,10 @@ class LargeFilesBase(FilesBase):
             if os.path.getsize(file) > MAX_FILE_SIZE:
                 yield from self.process_large_file(file)
             else:
-                yield file
+                yield self.process_normal_file(file)
+
+    def process_normal_file(self, file: str) -> 'File':
+        return File(file)
 
     def process_large_file(self, file):
         raise NotImplementedError
@@ -118,17 +131,50 @@ class NoLargeFiles(LargeFilesBase):
         raise TelegramInvalidFile('"{}" file is too large for Telegram.'.format(file))
 
 
-class File:
+class File(FileIO):
+    force_file = False
+
+    def __init__(self, path: str, force_file: Union[bool, None] = None, thumbnail: Union[str, bool, None] = None):
+        super().__init__(path)
+        self.path = path
+        self.force_file = self.force_file if force_file is None else force_file
+        self._thumbnail = thumbnail
+
     @property
     def file_name(self):
-        raise NotImplementedError
+        return os.path.basename(self.path)
 
     @property
     def file_size(self):
-        raise NotImplementedError
+        return os.path.getsize(self.path)
+
+    @property
+    def short_name(self):
+        return '.'.join(self.file_name.split('.')[:-1])
+
+    @property
+    def is_custom_thumbnail(self):
+        return self._thumbnail is not False and self._thumbnail is not None
+
+    def get_thumbnail(self):
+        thumb = None
+        if self._thumbnail is None and not self.force_file:
+            try:
+                thumb = get_file_thumb(self.path)
+            except ThumbError as e:
+                click.echo('{}'.format(e), err=True)
+        elif self.is_custom_thumbnail:
+            if not isinstance(self._thumbnail, str):
+                raise TypeError('Invalid type for thumbnail: {}'.format(type(self._thumbnail)))
+            elif not os.path.lexists(self._thumbnail):
+                raise TelegramInvalidFile('{} thumbnail file does not exists.'.format(self._thumbnail))
+            thumb = self._thumbnail
+        return thumb
 
 
 class SplitFile(File, FileIO):
+    force_file = True
+
     def __init__(self, file: Union[str, bytes, int], max_read_size: int, name: str):
         super().__init__(file)
         self.max_read_size = max_read_size
@@ -149,7 +195,7 @@ class SplitFile(File, FileIO):
 
     @property
     def file_name(self):
-        return self._name
+        return self.path
 
     @property
     def file_size(self):
@@ -159,6 +205,10 @@ class SplitFile(File, FileIO):
         if not split_seek:
             self.remaining_size += self.tell() - offset
         return super().seek(offset, whence)
+
+    @property
+    def short_name(self):
+        return self.file_name.split('/')[-1]
 
 
 class SplitFiles(LargeFilesBase):

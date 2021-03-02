@@ -19,13 +19,14 @@ from telegram_upload.files import get_file_attributes, get_file_thumb, File
 from telethon.version import __version__ as telethon_version
 from telethon import TelegramClient
 
-from telegram_upload.utils import free_disk_usage, sizeof_fmt
+from telegram_upload.utils import free_disk_usage, sizeof_fmt, grouper
 
 if StrictVersion(telethon_version) >= StrictVersion('1.0'):
     import telethon.sync
 
 
 CAPTION_MAX_LENGTH = 200
+ALBUM_FILES = 10
 PROXY_ENVIRONMENT_VARIABLE_NAMES = [
     'TELEGRAM_UPLOAD_PROXY',
     'HTTPS_PROXY',
@@ -105,58 +106,44 @@ class Client(TelegramClient):
         return super().start(phone=phone, password=password, bot_token=bot_token, force_sms=force_sms,
                              first_name=first_name, last_name=last_name, max_attempts=max_attempts)
 
-    def send_files(self, entity, files, delete_on_success=False, print_file_id=False,
-                   force_file=False, forward=(), caption=None, thumbnail=None):
+    def send_files_as_album(self, entity, files, delete_on_success=False, print_file_id=False,
+                            force_file=False, forward=(), caption=None, thumbnail=None):
+        for files_group in grouper(ALBUM_FILES, files):
+            self._send_album(entity, files_group)
+
+    def send_files(self, entity, files: Iterable[File], delete_on_success=False, print_file_id=False,
+                   force_file=False, forward=(), caption=None):
         has_files = False
         for file in files:
             has_files = True
-            if isinstance(file, File):
-                name = file_name = file.file_name
-                file_size = file.file_size
-                force_file = True
-            else:
-                file_name = os.path.basename(file)
-                file_size = os.path.getsize(file)
-                name = '.'.join(file_name.split('.')[:-1])
-            name = name.split('/')[-1]
-            progress, bar = get_progress_bar('Uploading', file_name, file_size)
-            thumb = None
-            if thumbnail is None and not isinstance(file, File):
-                try:
-                    thumb = get_file_thumb(file)
-                except ThumbError as e:
-                    click.echo('{}'.format(e), err=True)
-            elif thumbnail is not False:
-                if not isinstance(thumbnail, str):
-                    raise TypeError('Invalid type for thumbnail: {}'.format(type(thumbnail)))
-                elif not os.path.lexists(thumbnail):
-                    raise TelegramInvalidFile('{} thumbnail file does not exists.'.format(thumbnail))
-                thumb = thumbnail
-            file_caption = truncate(caption if caption is not None else name, CAPTION_MAX_LENGTH)
+            progress, bar = get_progress_bar('Uploading', file.file_name, file.file_size)
+            file_caption = truncate(caption if caption is not None else file.short_name, CAPTION_MAX_LENGTH)
+            thumb = file.get_thumbnail()
             try:
                 if force_file or isinstance(file, File):
-                    attributes = [DocumentAttributeFilename(file_name)]
+                    attributes = [DocumentAttributeFilename(file.file_name)]
                 else:
                     attributes = get_file_attributes(file)
                 try:
                     message = self.send_file(entity, file, thumb=thumb,
-                                             file_size=file_size if isinstance(file, File) else None,
+                                             file_size=file.file_size if isinstance(file, File) else None,
                                              caption=file_caption, force_document=force_file,
                                              progress_callback=progress, attributes=attributes)
-                    if hasattr(message.media, 'document') and file_size != message.media.document.size:
+                    if hasattr(message.media, 'document') and file.file_size != message.media.document.size:
                         raise TelegramUploadDataLoss(
                             'Remote document size: {} bytes (local file size: {} bytes)'.format(
-                                message.media.document.size, file_size))
+                                message.media.document.size, file.file_size))
                 finally:
                     bar.render_finish()
             finally:
-                if thumb:
+                if thumb and file.is_custom_thumbnail:
                     os.remove(thumb)
             if print_file_id:
-                click.echo('Uploaded successfully "{}" (file_id {})'.format(file, pack_bot_file_id(message.media)))
+                click.echo('Uploaded successfully "{}" (file_id {})'.format(file.file_name,
+                                                                            pack_bot_file_id(message.media)))
             if delete_on_success:
                 click.echo('Deleting "{}"'.format(file))
-                os.remove(file)
+                os.remove(file.path)
             self.forward_to(message, forward)
         if not has_files:
             raise MissingFileError('Files do not exist.')

@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 
 """Console script for telegram-upload."""
+from typing import Type
+
 import click
 
 from telegram_upload.client import Client
 from telegram_upload.config import default_config, CONFIG_FILE
 from telegram_upload.exceptions import catch
-from telegram_upload.files import NoDirectoriesFiles, RecursiveFiles, NoLargeFiles, SplitFiles, is_valid_file
+from telegram_upload.files import NoDirectoriesFiles, RecursiveFiles, NoLargeFiles, SplitFiles, is_valid_file, \
+    LargeFilesBase
 
 DIRECTORY_MODES = {
     'fail': NoDirectoriesFiles,
@@ -89,16 +92,17 @@ def upload(files, to, config, delete_on_success, print_file_id, force_file, forw
     if directories == 'fail':
         # Validate now
         files = list(files)
-    files = LARGE_FILE_MODES[large_files](files)
-    if large_files == 'fail':
-        # Validate now
-        files = list(files)
     if no_thumbnail:
         thumbnail = False
     elif thumbnail_file:
         thumbnail = thumbnail_file
     else:
         thumbnail = None
+    files_cls: Type[LargeFilesBase] = LARGE_FILE_MODES[large_files]
+    files = files_cls(files, thumbnail=thumbnail, force_file=force_file)
+    if large_files == 'fail':
+        # Validate now
+        files = list(files)
     client.send_files(to, files, delete_on_success, print_file_id, force_file, forward, caption, thumbnail)
 
 

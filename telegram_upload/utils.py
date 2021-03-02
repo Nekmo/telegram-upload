@@ -1,8 +1,18 @@
+import itertools
 import shutil
 from telegram_upload._compat import scandir
 
 def free_disk_usage(directory='.'):
     return shutil.disk_usage(directory)[2]
+
+
+def grouper(n, iterable):
+    it = iter(iterable)
+    while True:
+        chunk = tuple(itertools.islice(it, n))
+        if not chunk:
+            return
+        yield chunk
 
 
 def sizeof_fmt(num, suffix='B'):
