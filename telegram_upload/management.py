@@ -79,8 +79,10 @@ class MutuallyExclusiveOption(click.Option):
 @click.option('-p', '--proxy', default=None,
               help='Use an http proxy, socks4, socks5 or mtproxy. For example socks5://user:pass@1.2.3.4:8080 '
                    'for socks5 and mtproxy://secret@1.2.3.4:443 for mtproxy.')
+@click.option('-a', '--album', is_flag=True,
+              help='Send video or photos as an album.')
 def upload(files, to, config, delete_on_success, print_file_id, force_file, forward, directories, large_files, caption,
-           no_thumbnail, thumbnail_file, proxy):
+           no_thumbnail, thumbnail_file, proxy, album):
     """Upload one or more files to Telegram using your personal account.
     The maximum file size is 2 GiB and by default they will be saved in
     your saved messages.
@@ -103,7 +105,10 @@ def upload(files, to, config, delete_on_success, print_file_id, force_file, forw
     if large_files == 'fail':
         # Validate now
         files = list(files)
-    client.send_files(to, files, delete_on_success, print_file_id, force_file, forward, caption, thumbnail)
+    if album:
+        client.send_files_as_album(to, files, delete_on_success, print_file_id, forward)
+    else:
+        client.send_files(to, files, delete_on_success, print_file_id, forward)
 
 
 @click.command()

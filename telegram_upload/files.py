@@ -11,13 +11,14 @@ from hachoir.metadata.video import MP4Metadata
 from telethon.tl.types import DocumentAttributeVideo, DocumentAttributeFilename
 
 from telegram_upload.exceptions import TelegramInvalidFile, ThumbError
-from telegram_upload.utils import scantree
+from telegram_upload.utils import scantree, truncate
 from telegram_upload.video import get_video_thumb, video_metadata
 
 mimetypes.init()
 
 
 MAX_FILE_SIZE = 2097152000
+CAPTION_MAX_LENGTH = 200
 
 
 def is_valid_file(file, error_logger=None):
@@ -134,11 +135,13 @@ class NoLargeFiles(LargeFilesBase):
 class File(FileIO):
     force_file = False
 
-    def __init__(self, path: str, force_file: Union[bool, None] = None, thumbnail: Union[str, bool, None] = None):
+    def __init__(self, path: str, force_file: Union[bool, None] = None, thumbnail: Union[str, bool, None] = None,
+                 caption: Union[str, None] = None):
         super().__init__(path)
         self.path = path
         self.force_file = self.force_file if force_file is None else force_file
         self._thumbnail = thumbnail
+        self._caption = caption
 
     @property
     def file_name(self):
@@ -156,6 +159,10 @@ class File(FileIO):
     def is_custom_thumbnail(self):
         return self._thumbnail is not False and self._thumbnail is not None
 
+    @property
+    def file_caption(self) -> str:
+        return truncate(self._caption if self._caption is not None else self.short_name, CAPTION_MAX_LENGTH)
+
     def get_thumbnail(self):
         thumb = None
         if self._thumbnail is None and not self.force_file:
@@ -170,6 +177,13 @@ class File(FileIO):
                 raise TelegramInvalidFile('{} thumbnail file does not exists.'.format(self._thumbnail))
             thumb = self._thumbnail
         return thumb
+
+    @property
+    def file_attributes(self):
+        if self.force_file:
+            return [DocumentAttributeFilename(self.file_name)]
+        else:
+            return get_file_attributes(self.path) or self.path
 
 
 class SplitFile(File, FileIO):

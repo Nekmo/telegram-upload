@@ -1,9 +1,14 @@
+import asyncio
 import itertools
 import shutil
 from telegram_upload._compat import scandir
 
 def free_disk_usage(directory='.'):
     return shutil.disk_usage(directory)[2]
+
+
+def truncate(text, max_length):
+    return (text[:max_length - 3] + '...') if len(text) > max_length else text
 
 
 def grouper(n, iterable):
@@ -30,3 +35,11 @@ def scantree(path, follow_symlinks=False):
             yield from scantree(entry.path, follow_symlinks)  # see below for Python 2.x
         else:
             yield entry
+
+
+def async_to_sync(coro):
+    loop = asyncio.get_event_loop()
+    if loop.is_running():
+        return coro
+    else:
+        return loop.run_until_complete(coro)
