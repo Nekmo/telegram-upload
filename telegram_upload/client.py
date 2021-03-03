@@ -114,12 +114,10 @@ class Client(TelegramClient):
         return self._get_response_message(random_ids, result, entity)
 
     def send_files_as_album(self, entity, files, delete_on_success=False, print_file_id=False,
-                            force_file=False, forward=(), caption=None, thumbnail=None):
+                            forward=()):
         for files_group in grouper(ALBUM_FILES, files):
-            # TODO: se están subiendo, pero no se soporta características como callback. Reimplementar send album
             media = self.send_files(entity, files_group, delete_on_success, print_file_id, forward, send_as_media=True)
             async_to_sync(self._send_album_media(entity, media))
-            # album = async_to_sync(self._send_album(entity, files_group, caption))
 
     def _send_file_message(self, entity, file, thumb, progress):
         message = self.send_file(entity, file, thumb=thumb,
