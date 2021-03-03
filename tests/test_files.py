@@ -57,8 +57,9 @@ class TestNoDirectoriesFiles(unittest.TestCase):
 
 class TestNoLargeFiles(unittest.TestCase):
     @patch('telegram_upload.files.os.path.getsize', return_value=MAX_FILE_SIZE - 1)
-    def test_small_file(self, m):
-        self.assertEqual(list(NoLargeFiles(['foo'])), ['foo'])
+    @patch('telegram_upload.files.File')
+    def test_small_file(self, m1, m2):
+        self.assertEqual(len(list(NoLargeFiles(['foo']))), 1)
 
     @patch('telegram_upload.files.os.path.getsize', return_value=MAX_FILE_SIZE + 1)
     def test_big_file(self, m):
@@ -84,8 +85,9 @@ class TestSplitFile(unittest.TestCase):
 
 class TestSplitFiles(unittest.TestCase):
     @patch('telegram_upload.files.os.path.getsize', return_value=MAX_FILE_SIZE - 1)
-    def test_small_file(self, m):
-        self.assertEqual(list(SplitFiles(['foo'])), ['foo'])
+    @patch('telegram_upload.files.File')
+    def test_small_file(self, m1, m2):
+        self.assertEqual(len(list(SplitFiles(['foo']))), 1)
 
     @patch('telegram_upload.files.os.path.getsize', return_value=MAX_FILE_SIZE + 1000)
     @patch('telegram_upload.files.SplitFile.__init__', return_value=None)

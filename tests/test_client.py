@@ -8,6 +8,7 @@ from telethon.tl.types import DocumentAttributeFilename
 
 from telegram_upload.client import Client, parse_proxy_string, phone_match
 from telegram_upload.exceptions import TelegramUploadDataLoss, TelegramUploadNoSpaceError, TelegramProxyError
+from telegram_upload.files import File
 
 CONFIG_DATA = {'api_hash': '', 'api_id': ''}
 
@@ -69,17 +70,19 @@ class TestClient(unittest.TestCase):
 
     def test_send_files(self):
         entity = 'foo'
-        self.client.send_files(entity, [self.upload_file_path])
+        file = File(self.upload_file_path)
+        self.client.send_files(entity, [file])
         self.client.send_file.assert_called_once_with(
-            entity, self.upload_file_path, thumb=None, file_size=None,
+            entity, file, thumb=None, file_size=file.file_size,
             caption=os.path.basename(self.upload_file_path).split('.')[0], force_document=False,
             progress_callback=AnyArg(), attributes=[],
         )
 
     def test_send_files_data_loss(self):
+        file = File(self.upload_file_path)
         self.client.send_file.return_value.media.document.size = 200
         with self.assertRaises(TelegramUploadDataLoss):
-            self.client.send_files('foo', [self.upload_file_path])
+            self.client.send_files('foo', [file])
 
     def test_download_files(self):
         m = Mock()

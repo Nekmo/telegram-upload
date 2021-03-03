@@ -183,7 +183,7 @@ class File(FileIO):
         if self.force_file:
             return [DocumentAttributeFilename(self.file_name)]
         else:
-            return get_file_attributes(self.path) or self.path
+            return get_file_attributes(self.path)
 
 
 class SplitFile(File, FileIO):
@@ -209,7 +209,7 @@ class SplitFile(File, FileIO):
 
     @property
     def file_name(self):
-        return self.path
+        return self._name
 
     @property
     def file_size(self):
