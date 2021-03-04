@@ -60,24 +60,19 @@ def get_file_attributes(file):
     return attrs
 
 
-def get_file_document_attributes(file, force_file):
-    if force_file or isinstance(file, File):
-        attributes = [DocumentAttributeFilename(file_name)]
-    else:
-        attributes = get_file_attributes(file)
-
-
 def get_file_thumb(file):
     if get_file_mime(file) == 'video':
         return get_video_thumb(file)
 
 
 class FilesBase:
-    def __init__(self, files, thumbnail: Union[str, bool, None] = None, force_file: bool = False):
+    def __init__(self, files, thumbnail: Union[str, bool, None] = None, force_file: bool = False,
+                 caption: Union[str, None] = None):
         self._iterator = None
         self.files = files
         self.thumbnail = thumbnail
         self.force_file = force_file
+        self.caption = caption
 
     def get_iterator(self):
         raise NotImplementedError
@@ -121,7 +116,7 @@ class LargeFilesBase(FilesBase):
                 yield self.process_normal_file(file)
 
     def process_normal_file(self, file: str) -> 'File':
-        return File(file)
+        return File(file, force_file=self.force_file, thumbnail=self.thumbnail, caption=self.caption)
 
     def process_large_file(self, file):
         raise NotImplementedError
