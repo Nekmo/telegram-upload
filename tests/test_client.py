@@ -7,7 +7,8 @@ import socks
 from telethon.tl.types import DocumentAttributeFilename
 
 from telegram_upload.client import Client, parse_proxy_string, phone_match
-from telegram_upload.exceptions import TelegramUploadDataLoss, TelegramUploadNoSpaceError, TelegramProxyError
+from telegram_upload.exceptions import TelegramUploadDataLoss, TelegramUploadNoSpaceError, TelegramProxyError, \
+    MissingFileError
 from telegram_upload.files import File
 
 CONFIG_DATA = {'api_hash': '', 'api_id': ''}
@@ -67,6 +68,11 @@ class TestClient(unittest.TestCase):
         self.client = Client('foo.json')
         self.client.send_file = Mock()
         self.client.send_file.return_value.media.document.size = os.path.getsize(self.upload_file_path)
+
+    @patch('telegram_upload.management.default_config')
+    def test_missing_file(self, m1):
+        with self.assertRaises(MissingFileError):
+            self.client.send_files('foo', [])
 
     def test_send_files(self):
         entity = 'foo'
