@@ -4,7 +4,7 @@ appdirs==1.4.4
 async-generator==1.10
 asyncqt==0.8.0
 Babel==2.8.0
-bleach==3.2.1
+bleach==3.3.0
 bump2version==1.0.0
 bumpversion==0.6.0
 certifi==2020.6.20
