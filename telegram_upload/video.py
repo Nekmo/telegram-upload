@@ -46,6 +46,8 @@ def get_video_size(file):
 def get_video_thumb(file, output=None, size=200):
     output = output or tempfile.NamedTemporaryFile(suffix='.jpg').name
     metadata = video_metadata(file)
+    if metadata is None:
+        return
     duration = metadata.get('duration').seconds if metadata.has('duration') else 0
     ratio = get_video_size(file)
     if ratio is None:
