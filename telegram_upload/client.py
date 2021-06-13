@@ -103,7 +103,10 @@ class Client(TelegramClient):
                              first_name=first_name, last_name=last_name, max_attempts=max_attempts)
 
     async def _send_album_media(self, entity, media):
-        entity = await self.get_input_entity(entity)
+        if ('-' in entity or '+' in entity) and (entity[1].isdigit() == True):
+            entity = await self.get_entity(int(entity))
+        else:
+            entity = await self.get_input_entity(entity)
         request = functions.messages.SendMultiMediaRequest(
             entity, reply_to_msg_id=None, multi_media=media,
             silent=None, schedule_date=None, clear_draft=None
@@ -120,6 +123,8 @@ class Client(TelegramClient):
             async_to_sync(self._send_album_media(entity, media))
 
     def _send_file_message(self, entity, file, thumb, progress):
+        if ('-' in entity or '+' in entity) and (entity[1].isdigit() == True):
+            entity = int(entity)
         message = self.send_file(entity, file, thumb=thumb,
                                  file_size=file.file_size if isinstance(file, File) else None,
                                  caption=file.file_caption, force_document=file.force_file,
@@ -131,7 +136,11 @@ class Client(TelegramClient):
         return message
 
     async def _send_media(self, entity, file: File, progress):
-        entity = await self.get_input_entity(entity)
+        if ('-' in entity or '+' in entity) and (entity[1].isdigit() == True):
+            entity = await self.get_entity(int(entity))
+        else:
+            entity = await self.get_input_entity(entity)
+        # entity = await self.get_input_entity(entity)
         supports_streaming = False  # TODO
         fh, fm, _ = await self._file_to_media(
             file, supports_streaming=file, progress_callback=progress)
