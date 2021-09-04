@@ -3,8 +3,9 @@ import os
 
 import click
 
-CONFIG_FILE = os.path.expanduser('~/.config/telegram-upload.json')
-SESSION_FILE = os.path.expanduser('~/.config/telegram-upload')
+CONFIG_DIRECTORY = os.environ.get('TELEGRAM_UPLOAD_CONFIG_DIRECTORY', '~/.config')
+CONFIG_FILE = os.path.expanduser('{}/telegram-upload.json'.format(CONFIG_DIRECTORY))
+SESSION_FILE = os.path.expanduser('{}/telegram-upload'.format(CONFIG_DIRECTORY))
 
 
 def prompt_config(config_file):
