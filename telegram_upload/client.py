@@ -8,15 +8,16 @@ from urllib.parse import urlparse
 import click
 import os
 
+from telethon.errors import ApiIdInvalidError
 from telethon.network import ConnectionTcpMTProxyRandomizedIntermediate
 from telethon.tl import types, functions
 from telethon.tl.types import Message, DocumentAttributeFilename
 from telethon.utils import pack_bot_file_id
 
 from telegram_upload.config import SESSION_FILE
-from telegram_upload.exceptions import ThumbError, TelegramUploadDataLoss, TelegramUploadNoSpaceError, \
-    TelegramProxyError, TelegramInvalidFile, MissingFileError
-from telegram_upload.files import get_file_attributes, get_file_thumb, File
+from telegram_upload.exceptions import TelegramUploadDataLoss, TelegramUploadNoSpaceError, \
+    TelegramProxyError, MissingFileError, InvalidApiFileError
+from telegram_upload.files import File
 from telethon.version import __version__ as telethon_version
 from telethon import TelegramClient, utils
 
@@ -84,6 +85,7 @@ class Client(TelegramClient):
     def __init__(self, config_file, proxy=None, **kwargs):
         with open(config_file) as f:
             config = json.load(f)
+        self.config_file = config_file
         proxy = proxy if proxy is not None else get_proxy_environment_variable()
         proxy = parse_proxy_string(proxy)
         if proxy and proxy[0] == 'mtproxy':
@@ -99,8 +101,11 @@ class Client(TelegramClient):
             *,
             bot_token=None, force_sms=False, code_callback=None,
             first_name='New User', last_name='', max_attempts=3):
-        return super().start(phone=phone, password=password, bot_token=bot_token, force_sms=force_sms,
-                             first_name=first_name, last_name=last_name, max_attempts=max_attempts)
+        try:
+            return super().start(phone=phone, password=password, bot_token=bot_token, force_sms=force_sms,
+                                 first_name=first_name, last_name=last_name, max_attempts=max_attempts)
+        except ApiIdInvalidError:
+            raise InvalidApiFileError(self.config_file)
 
     async def _send_album_media(self, entity, media):
         entity = await self.get_input_entity(entity)

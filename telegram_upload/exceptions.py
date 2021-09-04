@@ -3,6 +3,10 @@
 """Exceptions for telegram-upload."""
 import sys
 
+import click
+
+from telegram_upload.config import prompt_config
+
 
 class ThumbError(Exception):
     pass
@@ -32,6 +36,12 @@ class MissingFileError(TelegramUploadError):
     pass
 
 
+class InvalidApiFileError(TelegramUploadError):
+    def __init__(self, config_file, extra_body=''):
+        self.config_file = config_file
+        super().__init__(extra_body)
+
+
 class TelegramInvalidFile(TelegramUploadError):
     error_code = 3
 
@@ -52,6 +62,10 @@ def catch(fn):
     def wrap(*args, **kwargs):
         try:
             return fn(*args, **kwargs)
+        except InvalidApiFileError as e:
+            click.echo('The api_id/api_hash combination is invalid. Re-enter both values.')
+            prompt_config(e.config_file)
+            return catch(fn)(*args, **kwargs)
         except TelegramUploadError as e:
             sys.stderr.write('[Error] telegram-upload Exception:\n{}\n'.format(e))
             exit(e.error_code)
