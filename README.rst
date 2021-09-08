@@ -82,3 +82,29 @@ Features
 * Download files.
 * Add video thumbs.
 * Delete local or remote file on success.
+
+Docker
+======
+Run telegram-upload without installing it on your system using Docker. Instead of ``telegram-upload``
+and ``telegram-download`` you should use ``upload`` and ``download``. Usage::
+
+
+    docker run -v <files_dir>:/files/
+               -v <config_dir>:/config
+               -it nekmo/telegram-upload:master
+               <command> <args>
+
+* ``<files_dir>``: upload or download directory.
+* ``<config_dir>``: Directory that will be created to store the telegram-upload configuration.
+  It is created automatically.
+* ``<command>``: ``upload`` and ``download``.
+* ``<args>``: ``telegram-upload`` and ``telegram-download`` arguments.
+
+For example::
+
+    docker run -v /media/data/:/files/
+               -v $PWD/config:/config
+               -it nekmo/telegram-upload:master
+               upload file_to_upload.txt
+
+

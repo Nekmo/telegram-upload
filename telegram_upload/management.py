@@ -142,8 +142,13 @@ if __name__ == '__main__':
     sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
     commands = {'upload': upload_cli, 'download': download_cli}
     if len(sys.argv) < 2:
-        sys.stderr.write('A command is required. Available options: {}\n'.format(
+        sys.stderr.write('A command is required. Available commands: {}\n'.format(
             ', '.join(commands)
+        ))
+        sys.exit(1)
+    if sys.argv[1] not in commands:
+        sys.stderr.write('{} is an invalid command. Valid commands: {}\n'.format(
+            sys.argv[1], ', '.join(commands)
         ))
         sys.exit(1)
     fn = commands[sys.argv[1]]
