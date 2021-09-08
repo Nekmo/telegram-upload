@@ -45,11 +45,11 @@ and ``telegram-download`` you should use ``upload`` and ``download``. Usage::
 
 
     docker run -v <files_dir>:/files/
-               -v <config_dir>:/config
+               -v <config_dir>:/config/
                -it nekmo/telegram-upload:master
                <command> <args>
 
-* ``<files_dir>``: upload or download directory.
+* ``<files_dir>``: Upload or download directory.
 * ``<config_dir>``: Directory that will be created to store the telegram-upload configuration.
   It is created automatically.
 * ``<command>``: ``upload`` and ``download``.
@@ -58,6 +58,6 @@ and ``telegram-download`` you should use ``upload`` and ``download``. Usage::
 For example::
 
     docker run -v /media/data/:/files/
-               -v $PWD/config:/config
+               -v $PWD/config:/config/
                -it nekmo/telegram-upload:master
                upload file_to_upload.txt
