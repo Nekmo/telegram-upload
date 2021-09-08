@@ -19,8 +19,7 @@ jobs:
           uses: docker/metadata-action@v3
           with:
             images: |
-              name/app
-              ghcr.io/username/app
+              nekmo/telegram-upload
             tags: |
               type=schedule
               type=ref,event=branch
