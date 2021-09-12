@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 
 """Console script for telegram-upload."""
-from typing import Type
 
 import click
 
 from telegram_upload.client import Client
 from telegram_upload.config import default_config, CONFIG_FILE
 from telegram_upload.exceptions import catch
-from telegram_upload.files import NoDirectoriesFiles, RecursiveFiles, NoLargeFiles, SplitFiles, is_valid_file, \
-    LargeFilesBase
+from telegram_upload.files import NoDirectoriesFiles, RecursiveFiles, NoLargeFiles, SplitFiles, is_valid_file
+
+from telegram_upload.utils import async_to_sync
 
 DIRECTORY_MODES = {
     'fail': NoDirectoriesFiles,
@@ -19,6 +19,24 @@ LARGE_FILE_MODES = {
     'fail': NoLargeFiles,
     'split': SplitFiles,
 }
+
+
+async def show_checkboxlist(iterator):
+    # iterator = map(lambda x: (x, f'{x.text} by {x.chat.first_name}'), iterator)
+    from prompt_toolkit import Application
+    from prompt_toolkit.layout import Layout
+    from telegram_upload.cli import IterableCheckboxList
+    iterator = iterator.iter_files('me')
+    try:
+        checkbox_list = IterableCheckboxList(
+            values=iterator
+        )
+        await checkbox_list._init(iterator)
+    except IndexError:
+        click.echo('No items were found. Exiting...', err=True)
+        return []
+    app = Application(full_screen=False, layout=Layout(checkbox_list), mouse_support=True)
+    await app.run_async()
 
 
 class MutuallyExclusiveOption(click.Option):
@@ -120,7 +138,9 @@ def upload(files, to, config, delete_on_success, print_file_id, force_file, forw
 @click.option('-p', '--proxy', default=None,
               help='Use an http proxy, socks4, socks5 or mtproxy. For example socks5://user:pass@1.2.3.4:8080 '
                    'for socks5 and mtproxy://secret@1.2.3.4:443 for mtproxy.')
-def download(from_, config, delete_on_success, proxy):
+@click.option('-i', '--interactive', is_flag=True,
+              help='Use interactive mode.')
+def download(from_, config, delete_on_success, proxy, interactive):
     """Download all the latest messages that are files in a chat, by default download
     from "saved messages". It is recommended to forward the files to download to
     "saved messages" and use parameter ``--delete-on-success``. Forwarded messages will
@@ -128,7 +148,14 @@ def download(from_, config, delete_on_success, proxy):
     """
     client = Client(config or default_config(), proxy=proxy)
     client.start()
-    messages = client.find_files(from_)
+
+    if interactive:
+        # messages = async_to_sync(show_checkboxlist(map(lambda x: (x, f'{x.text} by {x.chat.first_name}'),
+        #                                  client.iter_files(from_))))
+        # messages = async_to_sync(show_checkboxlist(client.iter_files(from_)))
+        messages = async_to_sync(show_checkboxlist(client))
+    else:
+        messages = client.find_files(from_)
     client.download_files(from_, messages, delete_on_success)
 
 

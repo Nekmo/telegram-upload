@@ -11,7 +11,7 @@ import os
 from telethon.errors import ApiIdInvalidError
 from telethon.network import ConnectionTcpMTProxyRandomizedIntermediate
 from telethon.tl import types, functions
-from telethon.tl.types import Message, DocumentAttributeFilename
+from telethon.tl.types import Message, DocumentAttributeFilename, InputMessagesFilterDocument
 from telethon.utils import pack_bot_file_id
 
 from telegram_upload.config import SESSION_FILE
@@ -199,6 +199,14 @@ class Client(TelegramClient):
                 yield message
             else:
                 break
+
+    async def iter_files(self, entity, page_size: int = 10):
+        async for message in self.iter_messages(entity=entity):
+            yield (message, f'{message.text} by {message.chat.first_name} {message.id}')
+
+    async def async_iter_files(self, entity):
+        for file in self.iter_messages(entity):
+            yield file
 
     def download_files(self, entity, messages: Iterable[Message], delete_on_success: bool = False):
         messages = reversed(list(messages))
