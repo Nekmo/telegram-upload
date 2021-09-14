@@ -18,7 +18,7 @@ mimetypes.init()
 
 
 MAX_FILE_SIZE = 2097152000
-CAPTION_MAX_LENGTH = 200
+CAPTION_MAX_LENGTH = 2000
 
 
 def is_valid_file(file, error_logger=None):
