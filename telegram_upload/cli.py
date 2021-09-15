@@ -1,7 +1,7 @@
 import asyncio
-from itertools import islice
 from typing import Sequence, Tuple, List, TypeVar
 
+import click
 from prompt_toolkit.filters import Condition
 from prompt_toolkit.formatted_text import AnyFormattedText
 from prompt_toolkit.key_binding import KeyBindings
@@ -9,20 +9,11 @@ from prompt_toolkit.layout import FormattedTextControl, Window, ConditionalMargi
 from prompt_toolkit.widgets import CheckboxList, RadioList
 from prompt_toolkit.widgets.base import E, _DialogList
 
+from telegram_upload.utils import aislice
+
 _T = TypeVar("_T")
 
 PAGE_SIZE = 10
-
-
-async def aislice(iterator, limit):
-    items = []
-    i = 0
-    async for value in iterator:
-        if i > limit:
-            break
-        i += 1
-        items.append(value)
-    return items
 
 
 async def async_handler(handler, event):
@@ -121,3 +112,31 @@ class IterableCheckboxList(IterableDialogList, CheckboxList):
 
 class IterableRadioList(IterableDialogList, RadioList):
     pass
+
+
+async def show_cli_widget(widget):
+    from prompt_toolkit import Application
+    from prompt_toolkit.layout import Layout
+    app = Application(full_screen=False, layout=Layout(widget), mouse_support=True)
+    return await app.run_async()
+
+
+async def show_checkboxlist(iterator):
+    # iterator = map(lambda x: (x, f'{x.text} by {x.chat.first_name}'), iterator)
+    try:
+        checkbox_list = IterableCheckboxList(iterator)
+        await checkbox_list._init(iterator)
+    except IndexError:
+        click.echo('No items were found. Exiting...', err=True)
+        return []
+    return await show_cli_widget(checkbox_list)
+
+
+async def show_radiolist(iterator):
+    try:
+        radio_list = IterableRadioList(iterator)
+        await radio_list._init(iterator)
+    except IndexError:
+        click.echo('No items were found. Exiting...', err=True)
+        return []
+    return await show_cli_widget(radio_list)

@@ -3,16 +3,15 @@
 """Console script for telegram-upload."""
 
 import click
-from aiostream import stream
 from telethon.tl.types import User
 
+from telegram_upload.cli import show_checkboxlist, show_radiolist
 from telegram_upload.client import Client, get_message_file_attribute
 from telegram_upload.config import default_config, CONFIG_FILE
 from telegram_upload.exceptions import catch
 from telegram_upload.files import NoDirectoriesFiles, RecursiveFiles, NoLargeFiles, SplitFiles, is_valid_file
 
-from telegram_upload.utils import async_to_sync
-
+from telegram_upload.utils import async_to_sync, amap
 
 DIRECTORY_MODES = {
     'fail': NoDirectoriesFiles,
@@ -46,45 +45,15 @@ def get_file_display_name(message):
     return ' '.join(display_name_parts)
 
 
-async def show_cli_widget(widget):
-    from prompt_toolkit import Application
-    from prompt_toolkit.layout import Layout
-    app = Application(full_screen=False, layout=Layout(widget), mouse_support=True)
-    return await app.run_async()
-
-
-async def show_checkboxlist(iterator):
-    # iterator = map(lambda x: (x, f'{x.text} by {x.chat.first_name}'), iterator)
-    from telegram_upload.cli import IterableCheckboxList
-    try:
-        checkbox_list = IterableCheckboxList(iterator)
-        await checkbox_list._init(iterator)
-    except IndexError:
-        click.echo('No items were found. Exiting...', err=True)
-        return []
-    return await show_cli_widget(checkbox_list)
-
-
-async def show_radiolist(iterator):
-    from telegram_upload.cli import IterableRadioList
-    try:
-        radio_list = IterableRadioList(iterator)
-        await radio_list._init(iterator)
-    except IndexError:
-        click.echo('No items were found. Exiting...', err=True)
-        return []
-    return await show_cli_widget(radio_list)
-
-
 async def interactive_select_files(client, entity: str):
     iterator = client.iter_files(entity)
-    iterator = stream.map(iterator, lambda x: (x, get_file_display_name(x)))
+    iterator = amap(lambda x: (x, get_file_display_name(x)), iterator,)
     return await show_checkboxlist(iterator)
 
 
 async def interactive_select_dialog(client):
     iterator = client.iter_dialogs()
-    iterator = stream.map(iterator, lambda x: (x, str(x)))
+    iterator = amap(lambda x: (x, x.name), iterator,)
     return await show_radiolist(iterator)
 
 
