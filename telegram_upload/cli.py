@@ -25,12 +25,22 @@ async def aislice(iterator, limit):
     return items
 
 
+async def async_handler(handler, event):
+    if handler:
+        await handler(event)
+
+    # Tell the application to redraw. We need to do this,
+    # because the below event handler won't be able to
+    # wait for the task to finish.
+    event.app.invalidate()
+
+
 class IterableCheckboxList(CheckboxList):
     def __init__(self, values: Sequence[Tuple[_T, AnyFormattedText]]) -> None:
         pass
 
     async def _init(self, values: Sequence[Tuple[_T, AnyFormattedText]]) -> None:
-        started_values = await aislice(values, 10)
+        started_values = await aislice(values, PAGE_SIZE)
 
         # started_values = await aislice(values, PAGE_SIZE)
         if not started_values:
@@ -42,20 +52,6 @@ class IterableCheckboxList(CheckboxList):
         self.current_value: _T = started_values[0][0]
         self._selected_index = 0
 
-        async def handler(event):
-            if self._selected_index + 1 >= len(self.values):
-                self.values.extend(await aislice(values, PAGE_SIZE))
-            self._selected_index = min(len(self.values) - 1, self._selected_index + 1)
-
-        async def async_handler(event):
-            if handler:
-                await handler(event)
-
-            # Tell the application to redraw. We need to do this,
-            # because the below event handler won't be able to
-            # wait for the task to finish.
-            event.app.invalidate()
-
         # Key bindings.
         kb = KeyBindings()
 
@@ -65,10 +61,11 @@ class IterableCheckboxList(CheckboxList):
 
         @kb.add("down")
         def _down(event: E) -> None:
-            # if self._selected_index + 1 >= len(self.values):
-            #     self.values.extend(islice(values, PAGE_SIZE))
-            # self._selected_index = min(len(self.values) - 1, self._selected_index + 1)
-            asyncio.get_event_loop().create_task(async_handler(event))
+            async def handler(event):
+                if self._selected_index + 1 >= len(self.values):
+                    self.values.extend(await aislice(values, PAGE_SIZE))
+                self._selected_index = min(len(self.values) - 1, self._selected_index + 1)
+            asyncio.get_event_loop().create_task(async_handler(handler, event))
 
         @kb.add("pageup")
         def _pageup(event: E) -> None:
@@ -80,18 +77,23 @@ class IterableCheckboxList(CheckboxList):
 
         @kb.add("pagedown")
         def _pagedown(event: E) -> None:
-            w = event.app.layout.current_window
-            if self._selected_index + len(w.render_info.displayed_lines) >= len(self.values):
-                self.values.extend(islice(values, PAGE_SIZE))
-            if w.render_info:
-                self._selected_index = min(
-                    len(self.values) - 1,
-                    self._selected_index + len(w.render_info.displayed_lines),
-                )
+            async def handler(event):
+                w = event.app.layout.current_window
+                if self._selected_index + len(w.render_info.displayed_lines) >= len(self.values):
+                    self.values.extend(await aislice(values, PAGE_SIZE))
+                if w.render_info:
+                    self._selected_index = min(
+                        len(self.values) - 1,
+                        self._selected_index + len(w.render_info.displayed_lines),
+                    )
+            asyncio.get_event_loop().create_task(async_handler(handler, event))
 
-        # @kb.add("enter")
+        @kb.add("enter")
+        def _enter(event: E) -> None:
+            event.app.exit(result=self.current_values)
+
         @kb.add(" ")
-        def _click(event: E) -> None:
+        def _enter(event: E) -> None:
             self._handle_enter()
 
         # Control and window.

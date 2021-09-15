@@ -3,13 +3,16 @@
 """Console script for telegram-upload."""
 
 import click
+from aiostream import stream
+from telethon.tl.types import User
 
-from telegram_upload.client import Client
+from telegram_upload.client import Client, get_message_file_attribute
 from telegram_upload.config import default_config, CONFIG_FILE
 from telegram_upload.exceptions import catch
 from telegram_upload.files import NoDirectoriesFiles, RecursiveFiles, NoLargeFiles, SplitFiles, is_valid_file
 
 from telegram_upload.utils import async_to_sync
+
 
 DIRECTORY_MODES = {
     'fail': NoDirectoriesFiles,
@@ -21,22 +24,47 @@ LARGE_FILE_MODES = {
 }
 
 
+def get_file_display_name(message):
+    display_name_parts = []
+    is_document = message.document
+    if is_document and message.document.mime_type:
+        display_name_parts.append(message.document.mime_type.split('/')[0])
+    if is_document and get_message_file_attribute(message):
+        display_name_parts.append(get_message_file_attribute(message).file_name)
+    if message.text:
+        display_name_parts.append(f'[{message.text}]' if display_name_parts else message.text)
+    from_user = message.sender and isinstance(message.sender, User)
+    if from_user:
+        display_name_parts.append('by')
+    if from_user and message.sender.first_name:
+        display_name_parts.append(message.sender.first_name)
+    if from_user and message.sender.last_name:
+        display_name_parts.append(message.sender.last_name)
+    if from_user and message.sender.username:
+        display_name_parts.append(f'@{message.sender.username}')
+    display_name_parts.append(f'{message.date}')
+    return ' '.join(display_name_parts)
+
+
 async def show_checkboxlist(iterator):
     # iterator = map(lambda x: (x, f'{x.text} by {x.chat.first_name}'), iterator)
     from prompt_toolkit import Application
     from prompt_toolkit.layout import Layout
     from telegram_upload.cli import IterableCheckboxList
-    iterator = iterator.iter_files('me')
     try:
-        checkbox_list = IterableCheckboxList(
-            values=iterator
-        )
+        checkbox_list = IterableCheckboxList(iterator)
         await checkbox_list._init(iterator)
     except IndexError:
         click.echo('No items were found. Exiting...', err=True)
         return []
     app = Application(full_screen=False, layout=Layout(checkbox_list), mouse_support=True)
-    await app.run_async()
+    return await app.run_async()
+
+
+async def interactive_get_files(client, entity: str):
+    iterator = client.iter_files(entity)
+    iterator = stream.map(iterator, lambda x: (x, get_file_display_name(x)))
+    return await show_checkboxlist(iterator)
 
 
 class MutuallyExclusiveOption(click.Option):
@@ -153,7 +181,7 @@ def download(from_, config, delete_on_success, proxy, interactive):
         # messages = async_to_sync(show_checkboxlist(map(lambda x: (x, f'{x.text} by {x.chat.first_name}'),
         #                                  client.iter_files(from_))))
         # messages = async_to_sync(show_checkboxlist(client.iter_files(from_)))
-        messages = async_to_sync(show_checkboxlist(client))
+        messages = async_to_sync(interactive_get_files(client, from_))
     else:
         messages = client.find_files(from_)
     client.download_files(from_, messages, delete_on_success)
