@@ -6,8 +6,8 @@ from prompt_toolkit.filters import Condition
 from prompt_toolkit.formatted_text import AnyFormattedText
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.layout import FormattedTextControl, Window, ConditionalMargin, ScrollbarMargin
-from prompt_toolkit.widgets import CheckboxList
-from prompt_toolkit.widgets.base import E
+from prompt_toolkit.widgets import CheckboxList, RadioList
+from prompt_toolkit.widgets.base import E, _DialogList
 
 _T = TypeVar("_T")
 
@@ -35,7 +35,7 @@ async def async_handler(handler, event):
     event.app.invalidate()
 
 
-class IterableCheckboxList(CheckboxList):
+class IterableDialogList(_DialogList):
     def __init__(self, values: Sequence[Tuple[_T, AnyFormattedText]]) -> None:
         pass
 
@@ -112,3 +112,12 @@ class IterableCheckboxList(CheckboxList):
             ],
             dont_extend_height=True,
         )
+
+
+
+class IterableCheckboxList(IterableDialogList, CheckboxList):
+    pass
+
+
+class IterableRadioList(IterableDialogList, RadioList):
+    pass

@@ -46,10 +46,15 @@ def get_file_display_name(message):
     return ' '.join(display_name_parts)
 
 
-async def show_checkboxlist(iterator):
-    # iterator = map(lambda x: (x, f'{x.text} by {x.chat.first_name}'), iterator)
+async def show_cli_widget(widget):
     from prompt_toolkit import Application
     from prompt_toolkit.layout import Layout
+    app = Application(full_screen=False, layout=Layout(widget), mouse_support=True)
+    return await app.run_async()
+
+
+async def show_checkboxlist(iterator):
+    # iterator = map(lambda x: (x, f'{x.text} by {x.chat.first_name}'), iterator)
     from telegram_upload.cli import IterableCheckboxList
     try:
         checkbox_list = IterableCheckboxList(iterator)
@@ -57,14 +62,30 @@ async def show_checkboxlist(iterator):
     except IndexError:
         click.echo('No items were found. Exiting...', err=True)
         return []
-    app = Application(full_screen=False, layout=Layout(checkbox_list), mouse_support=True)
-    return await app.run_async()
+    return await show_cli_widget(checkbox_list)
 
 
-async def interactive_get_files(client, entity: str):
+async def show_radiolist(iterator):
+    from telegram_upload.cli import IterableRadioList
+    try:
+        radio_list = IterableRadioList(iterator)
+        await radio_list._init(iterator)
+    except IndexError:
+        click.echo('No items were found. Exiting...', err=True)
+        return []
+    return await show_cli_widget(radio_list)
+
+
+async def interactive_select_files(client, entity: str):
     iterator = client.iter_files(entity)
     iterator = stream.map(iterator, lambda x: (x, get_file_display_name(x)))
     return await show_checkboxlist(iterator)
+
+
+async def interactive_select_dialog(client):
+    iterator = client.iter_dialogs()
+    iterator = stream.map(iterator, lambda x: (x, str(x)))
+    return await show_radiolist(iterator)
 
 
 class MutuallyExclusiveOption(click.Option):
@@ -158,7 +179,7 @@ def upload(files, to, config, delete_on_success, print_file_id, force_file, forw
 
 
 @click.command()
-@click.option('--from', '-f', 'from_', default='me',
+@click.option('--from', '-f', 'from_', default='',
               help='Phone number, username, chat id or "me" (saved messages). By default "me".')
 @click.option('--config', default=None, help='Configuration file to use. By default "{}".'.format(CONFIG_FILE))
 @click.option('-d', '--delete-on-success', is_flag=True,
@@ -176,12 +197,16 @@ def download(from_, config, delete_on_success, proxy, interactive):
     """
     client = Client(config or default_config(), proxy=proxy)
     client.start()
-
+    if not interactive and not from_:
+        from_ = 'me'
+    elif interactive and not from_:
+        click.echo('Select the dialog of the files to download:')
+        click.echo('[SPACE] Select dialog [ENTER] Next step')
+        from_ = async_to_sync(interactive_select_dialog(client))
     if interactive:
-        # messages = async_to_sync(show_checkboxlist(map(lambda x: (x, f'{x.text} by {x.chat.first_name}'),
-        #                                  client.iter_files(from_))))
-        # messages = async_to_sync(show_checkboxlist(client.iter_files(from_)))
-        messages = async_to_sync(interactive_get_files(client, from_))
+        click.echo('Select all files to download:')
+        click.echo('[SPACE] Select files [ENTER] Download selected files')
+        messages = async_to_sync(interactive_select_files(client, from_))
     else:
         messages = client.find_files(from_)
     client.download_files(from_, messages, delete_on_success)
