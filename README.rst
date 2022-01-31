@@ -36,6 +36,9 @@ telegram-upload
 Telegram-upload uses your personal Telegram account to upload and download files up to 2GiB (bots are limited to 50
 MiB). Turn Telegram into your personal cloud!
 
+###############
+It supports up to 2000 chars in file caption
+###############
 
 To **install telegram-upload**, run this command in your terminal:
 
