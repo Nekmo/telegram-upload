@@ -43,3 +43,19 @@ def async_to_sync(coro):
         return coro
     else:
         return loop.run_until_complete(coro)
+
+
+async def aislice(iterator, limit):
+    items = []
+    i = 0
+    async for value in iterator:
+        if i > limit:
+            break
+        i += 1
+        items.append(value)
+    return items
+
+
+async def amap(fn, iterator):
+    async for value in iterator:
+        yield fn(value)

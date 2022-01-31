@@ -1,36 +1,37 @@
 import asyncio
-from itertools import islice
 from typing import Sequence, Tuple, List, TypeVar
 
+import click
 from prompt_toolkit.filters import Condition
 from prompt_toolkit.formatted_text import AnyFormattedText
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.layout import FormattedTextControl, Window, ConditionalMargin, ScrollbarMargin
-from prompt_toolkit.widgets import CheckboxList
-from prompt_toolkit.widgets.base import E
+from prompt_toolkit.widgets import CheckboxList, RadioList
+from prompt_toolkit.widgets.base import E, _DialogList
+
+from telegram_upload.utils import aislice
 
 _T = TypeVar("_T")
 
 PAGE_SIZE = 10
 
 
-async def aislice(iterator, limit):
-    items = []
-    i = 0
-    async for value in iterator:
-        if i > limit:
-            break
-        i += 1
-        items.append(value)
-    return items
+async def async_handler(handler, event):
+    if handler:
+        await handler(event)
+
+    # Tell the application to redraw. We need to do this,
+    # because the below event handler won't be able to
+    # wait for the task to finish.
+    event.app.invalidate()
 
 
-class IterableCheckboxList(CheckboxList):
+class IterableDialogList(_DialogList):
     def __init__(self, values: Sequence[Tuple[_T, AnyFormattedText]]) -> None:
         pass
 
     async def _init(self, values: Sequence[Tuple[_T, AnyFormattedText]]) -> None:
-        started_values = await aislice(values, 10)
+        started_values = await aislice(values, PAGE_SIZE)
 
         # started_values = await aislice(values, PAGE_SIZE)
         if not started_values:
@@ -42,20 +43,6 @@ class IterableCheckboxList(CheckboxList):
         self.current_value: _T = started_values[0][0]
         self._selected_index = 0
 
-        async def handler(event):
-            if self._selected_index + 1 >= len(self.values):
-                self.values.extend(await aislice(values, PAGE_SIZE))
-            self._selected_index = min(len(self.values) - 1, self._selected_index + 1)
-
-        async def async_handler(event):
-            if handler:
-                await handler(event)
-
-            # Tell the application to redraw. We need to do this,
-            # because the below event handler won't be able to
-            # wait for the task to finish.
-            event.app.invalidate()
-
         # Key bindings.
         kb = KeyBindings()
 
@@ -65,10 +52,11 @@ class IterableCheckboxList(CheckboxList):
 
         @kb.add("down")
         def _down(event: E) -> None:
-            # if self._selected_index + 1 >= len(self.values):
-            #     self.values.extend(islice(values, PAGE_SIZE))
-            # self._selected_index = min(len(self.values) - 1, self._selected_index + 1)
-            asyncio.get_event_loop().create_task(async_handler(event))
+            async def handler(event):
+                if self._selected_index + 1 >= len(self.values):
+                    self.values.extend(await aislice(values, PAGE_SIZE))
+                self._selected_index = min(len(self.values) - 1, self._selected_index + 1)
+            asyncio.get_event_loop().create_task(async_handler(handler, event))
 
         @kb.add("pageup")
         def _pageup(event: E) -> None:
@@ -80,18 +68,23 @@ class IterableCheckboxList(CheckboxList):
 
         @kb.add("pagedown")
         def _pagedown(event: E) -> None:
-            w = event.app.layout.current_window
-            if self._selected_index + len(w.render_info.displayed_lines) >= len(self.values):
-                self.values.extend(islice(values, PAGE_SIZE))
-            if w.render_info:
-                self._selected_index = min(
-                    len(self.values) - 1,
-                    self._selected_index + len(w.render_info.displayed_lines),
-                )
+            async def handler(event):
+                w = event.app.layout.current_window
+                if self._selected_index + len(w.render_info.displayed_lines) >= len(self.values):
+                    self.values.extend(await aislice(values, PAGE_SIZE))
+                if w.render_info:
+                    self._selected_index = min(
+                        len(self.values) - 1,
+                        self._selected_index + len(w.render_info.displayed_lines),
+                    )
+            asyncio.get_event_loop().create_task(async_handler(handler, event))
 
-        # @kb.add("enter")
+        @kb.add("enter")
+        def _enter(event: E) -> None:
+            event.app.exit(result=self.current_values)
+
         @kb.add(" ")
-        def _click(event: E) -> None:
+        def _enter(event: E) -> None:
             self._handle_enter()
 
         # Control and window.
@@ -110,3 +103,40 @@ class IterableCheckboxList(CheckboxList):
             ],
             dont_extend_height=True,
         )
+
+
+
+class IterableCheckboxList(IterableDialogList, CheckboxList):
+    pass
+
+
+class IterableRadioList(IterableDialogList, RadioList):
+    pass
+
+
+async def show_cli_widget(widget):
+    from prompt_toolkit import Application
+    from prompt_toolkit.layout import Layout
+    app = Application(full_screen=False, layout=Layout(widget), mouse_support=True)
+    return await app.run_async()
+
+
+async def show_checkboxlist(iterator):
+    # iterator = map(lambda x: (x, f'{x.text} by {x.chat.first_name}'), iterator)
+    try:
+        checkbox_list = IterableCheckboxList(iterator)
+        await checkbox_list._init(iterator)
+    except IndexError:
+        click.echo('No items were found. Exiting...', err=True)
+        return []
+    return await show_cli_widget(checkbox_list)
+
+
+async def show_radiolist(iterator):
+    try:
+        radio_list = IterableRadioList(iterator)
+        await radio_list._init(iterator)
+    except IndexError:
+        click.echo('No items were found. Exiting...', err=True)
+        return []
+    return await show_cli_widget(radio_list)

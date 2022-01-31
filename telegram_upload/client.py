@@ -24,7 +24,7 @@ from telethon import TelegramClient, utils
 from telegram_upload.utils import free_disk_usage, sizeof_fmt, grouper, async_to_sync
 
 if StrictVersion(telethon_version) >= StrictVersion('1.0'):
-    import telethon.sync
+    import telethon.sync  # noqa
 
 
 ALBUM_FILES = 10
@@ -33,6 +33,11 @@ PROXY_ENVIRONMENT_VARIABLE_NAMES = [
     'HTTPS_PROXY',
     'HTTP_PROXY',
 ]
+
+
+def get_message_file_attribute(message):
+    return next(filter(lambda x: isinstance(x, DocumentAttributeFilename),
+                       message.document.attributes), None)
 
 
 def phone_match(value):
@@ -200,19 +205,15 @@ class Client(TelegramClient):
             else:
                 break
 
-    async def iter_files(self, entity, page_size: int = 10):
+    async def iter_files(self, entity):
         async for message in self.iter_messages(entity=entity):
-            yield (message, f'{message.text} by {message.chat.first_name} {message.id}')
-
-    async def async_iter_files(self, entity):
-        for file in self.iter_messages(entity):
-            yield file
+            if message.document:
+                yield message
 
     def download_files(self, entity, messages: Iterable[Message], delete_on_success: bool = False):
         messages = reversed(list(messages))
         for message in messages:
-            filename_attr = next(filter(lambda x: isinstance(x, DocumentAttributeFilename),
-                                        message.document.attributes), None)
+            filename_attr = get_message_file_attribute(message)
             filename = filename_attr.file_name if filename_attr else 'Unknown'
             if message.document.size > free_disk_usage():
                 raise TelegramUploadNoSpaceError(
