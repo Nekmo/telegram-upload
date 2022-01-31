@@ -11,6 +11,41 @@ Usage
    :prog: telegram-download
    :show-nested:
 
+Interactive download
+====================
+Use the ``-i`` (or ``--interactive``) option to activate the **interactive mode** to choose the dialog (chat,
+channel...) and the files to download::
+
+    $ telegram-download -i
+
+The following keys are available in this mode:
+
+* **Up arrow**: previous option in the list.
+* **Down arrow**: next option in the list.
+* **Spacebar**: select the current option. The selected option is marked with an asterisk.
+* **mouse click**: also to select the option. Some terminals may not support it.
+* **Enter**: go to the next wizard step.
+* **pageup**: go to the previous page of items. Allows quick navigation..
+* **pagedown**: go to the next page of items. Allows quick navigation..
+
+This wizard has two steps. The *first step* chooses the conversation::
+
+    Select the dialog of the files to download:
+    [SPACE] Select dialog [ENTER] Next step
+    ( ) Groupchat 1
+    ( ) Bob's chat
+    ( ) A channel
+    ( ) Me
+
+
+The *second step* chooses the files to download. You can choose several files::
+
+    Select all files to download:
+    [SPACE] Select files [ENTER] Download selected files
+    [ ] image myphoto3.jpg by My Username @username 2022-01-31 02:15:07+00:00
+    [ ] image myphoto2.jpg by My Username @username 2022-01-31 02:15:05+00:00
+    [ ] image myphoto1.png by My Username @username 2022-01-31 02:15:03+00:00
+
 
 Proxies
 =======

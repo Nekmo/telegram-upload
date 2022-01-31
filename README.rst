@@ -62,7 +62,7 @@ it is advisable to create a session file for each machine. Upload options are av
 `in the documentation <https://docs.nekmo.org/telegram-upload/usage.html#telegram-upload>`_.
 
 
-You can download the files again from your saved messages (by default) or from a channel. All files will be
+You can **download the files** again from your saved messages (by default) or from a channel. All files will be
 downloaded until the last text message.
 
 .. code-block:: console
@@ -72,6 +72,14 @@ downloaded until the last text message.
 The ``--delete-on-success`` option allows you to delete the Telegram message after downloading the file. This is
 useful to send files to download to your saved messages and avoid downloading them again. You can use this option to
 download files on your computer away from home.
+
+The **interactive option** (``--interactive``) allows you to choose the dialog and the files to download with a
+**terminal wizard**. It even **supports mouse**!
+
+.. code-block:: console
+
+    $ telegram-download --interactive
+
 `Read the documentation <https://docs.nekmo.org/telegram-upload/usage.html#telegram-download>`_ for more info.
 
 
