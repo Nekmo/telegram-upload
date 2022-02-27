@@ -59,3 +59,8 @@ async def aislice(iterator, limit):
 async def amap(fn, iterator):
     async for value in iterator:
         yield fn(value)
+
+
+async def sync_to_async_iterator(iterator):
+    for value in iterator:
+        yield value

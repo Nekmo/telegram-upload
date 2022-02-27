@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """Console script for telegram-upload."""
+import os
 
 import click
 from telethon.tl.types import User
@@ -11,7 +12,7 @@ from telegram_upload.config import default_config, CONFIG_FILE
 from telegram_upload.exceptions import catch
 from telegram_upload.files import NoDirectoriesFiles, RecursiveFiles, NoLargeFiles, SplitFiles, is_valid_file
 
-from telegram_upload.utils import async_to_sync, amap
+from telegram_upload.utils import async_to_sync, amap, sync_to_async_iterator
 
 DIRECTORY_MODES = {
     'fail': NoDirectoriesFiles,
@@ -51,10 +52,17 @@ async def interactive_select_files(client, entity: str):
     return await show_checkboxlist(iterator)
 
 
+async def interactive_select_local_files():
+    iterator = filter(lambda x: os.path.isfile(x) and os.path.lexists(x), os.listdir('.'))
+    iterator = sync_to_async_iterator(map(lambda x: (x, x), iterator))
+    return await show_checkboxlist(iterator)
+
+
 async def interactive_select_dialog(client):
     iterator = client.iter_dialogs()
     iterator = amap(lambda x: (x, x.name), iterator,)
-    return await show_radiolist(iterator)
+    value = await show_radiolist(iterator)
+    return value.id if value else None
 
 
 class MutuallyExclusiveOption(click.Option):
@@ -91,7 +99,7 @@ class MutuallyExclusiveOption(click.Option):
 
 @click.command()
 @click.argument('files', nargs=-1)
-@click.option('--to', default='me', help='Phone number, username, invite link or "me" (saved messages). '
+@click.option('--to', default=None, help='Phone number, username, invite link or "me" (saved messages). '
                                          'By default "me".')
 @click.option('--config', default=None, help='Configuration file to use. By default "{}".'.format(CONFIG_FILE))
 @click.option('-d', '--delete-on-success', is_flag=True, help='Delete local file after successful upload.')
@@ -117,14 +125,26 @@ class MutuallyExclusiveOption(click.Option):
                    'for socks5 and mtproxy://secret@1.2.3.4:443 for mtproxy.')
 @click.option('-a', '--album', is_flag=True,
               help='Send video or photos as an album.')
+@click.option('-i', '--interactive', is_flag=True,
+              help='Use interactive mode.')
 def upload(files, to, config, delete_on_success, print_file_id, force_file, forward, directories, large_files, caption,
-           no_thumbnail, thumbnail_file, proxy, album):
+           no_thumbnail, thumbnail_file, proxy, album, interactive):
     """Upload one or more files to Telegram using your personal account.
     The maximum file size is 2 GiB and by default they will be saved in
     your saved messages.
     """
     client = Client(config or default_config(), proxy=proxy)
     client.start()
+    if interactive and not files:
+        click.echo('Select the local filesto upload:')
+        click.echo('[SPACE] Select file [ENTER] Next step')
+        files = async_to_sync(interactive_select_local_files())
+    if interactive and to is None:
+        click.echo('Select the recipient dialog of the files:')
+        click.echo('[SPACE] Select dialog [ENTER] Next step')
+        to = async_to_sync(interactive_select_dialog(client))
+    elif to is None:
+        to = 'me'
     files = filter(lambda file: is_valid_file(file, lambda message: click.echo(message, err=True)), files)
     files = DIRECTORY_MODES[directories](files)
     if directories == 'fail':
