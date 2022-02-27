@@ -136,7 +136,7 @@ def upload(files, to, config, delete_on_success, print_file_id, force_file, forw
     client = Client(config or default_config(), proxy=proxy)
     client.start()
     if interactive and not files:
-        click.echo('Select the local filesto upload:')
+        click.echo('Select the local files to upload:')
         click.echo('[SPACE] Select file [ENTER] Next step')
         files = async_to_sync(interactive_select_local_files())
     if interactive and to is None:

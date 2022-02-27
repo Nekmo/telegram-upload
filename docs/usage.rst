@@ -11,10 +11,14 @@ Usage
    :prog: telegram-download
    :show-nested:
 
-Interactive download
-====================
+Interactive mode
+================
 Use the ``-i`` (or ``--interactive``) option to activate the **interactive mode** to choose the dialog (chat,
-channel...) and the files to download::
+channel...) and the files. To **upload files** using interactive mode:
+
+    $ telegram-upload -i
+
+To **download files** using interactive mode:
 
     $ telegram-download -i
 
@@ -28,6 +32,28 @@ The following keys are available in this mode:
 * **pageup**: go to the previous page of items. Allows quick navigation..
 * **pagedown**: go to the next page of items. Allows quick navigation..
 
+Interactive upload
+------------------
+This wizard has two steps. The *first step* chooses the files to upload. You can choose several files::
+
+    Select the local files to upload:
+    [SPACE] Select file [ENTER] Next step
+    [ ] myphoto1.jpg
+    [ ] myphoto2.jpg
+    [ ] myphoto3.jpg
+
+The *second step* chooses the conversation::
+
+    Select the dialog of the files to download:
+    [SPACE] Select dialog [ENTER] Next step
+    ( ) Groupchat 1
+    ( ) Bob's chat
+    ( ) A channel
+    ( ) Me
+
+
+Interactive download
+--------------------
 This wizard has two steps. The *first step* chooses the conversation::
 
     Select the dialog of the files to download:

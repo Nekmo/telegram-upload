@@ -72,14 +72,19 @@ The ``--delete-on-success`` option allows you to delete the Telegram message aft
 useful to send files to download to your saved messages and avoid downloading them again. You can use this option to
 download files on your computer away from home.
 
-The **interactive option** (``--interactive``) allows you to choose the dialog and the files to download with a
-**terminal wizard**. It even **supports mouse**!
+`Read the documentation <https://docs.nekmo.org/telegram-upload/usage.html#telegram-download>`_ for more info.
+
+
+Interactive mode
+================
+The **interactive option** (``--interactive``) allows you to choose the dialog and the files to download or upload with
+a **terminal wizard**. It even **supports mouse**!
 
 .. code-block:: console
 
-    $ telegram-download --interactive
+    $ telegram-upload --interactive    # Interactive upload
+    $ telegram-download --interactive  # Interactive download
 
-`Read the documentation <https://docs.nekmo.org/telegram-upload/usage.html#telegram-download>`_ for more info.
 
 
 Features
