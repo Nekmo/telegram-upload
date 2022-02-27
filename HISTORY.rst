@@ -2,6 +2,23 @@
 History
 =======
 
+0.5.0 (2022-02-27)
+------------------
+
+* Issue #34: Selective downloading option
+* Issue #131: Selective uploading option
+* Issue #61: Upload as album
+* Issue #66: How to re-verify when I type in wrong app-id
+* Issue #69: Create Dockerfile
+* Issue #82: Error in files with corrupted or unsupported video mimetype
+* Issue #83: Raise error when file is empty
+* Issue #84: Catch ChatWriteForbiddenError
+* Issue #94: Unclosed file ~/.config/telegram-upload.json wb
+* Issue #110: Error uploading corrupt or unsupported video file
+* Issue #129: Caption chars length
+* Issue #149: Support Python 3.10
+
+
 0.4.0 (2020-12-31)
 ------------------
 
