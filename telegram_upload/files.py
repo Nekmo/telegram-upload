@@ -33,41 +33,50 @@ def is_valid_file(file, error_logger=None):
 
 
 def get_file_mime(file):
-    return (mimetypes.guess_type(file)[0] or ('')).split('/')[0]
+    return (mimetypes.guess_type(file)[0] or ("")).split("/")[0]
 
 
 def get_file_attributes(file):
     attrs = []
     mime = get_file_mime(file)
-    if mime == 'video':
+    if mime == "video":
         metadata = video_metadata(file)
         video_meta = metadata
         meta_groups = None
-        if hasattr(metadata, '_MultipleMetadata__groups'):
+        if hasattr(metadata, "_MultipleMetadata__groups"):
             # Is mkv
             meta_groups = metadata._MultipleMetadata__groups
-        if metadata is not None and not metadata.has('width') and meta_groups:
-            video_meta = meta_groups[next(filter(lambda x: x.startswith('video'), meta_groups._key_list))]
+        if metadata is not None and not metadata.has("width") and meta_groups:
+            video_meta = meta_groups[
+                next(filter(lambda x: x.startswith("video"), meta_groups._key_list))
+            ]
         if metadata is not None:
             supports_streaming = isinstance(video_meta, MP4Metadata)
-            attrs.append(DocumentAttributeVideo(
-                (0, metadata.get('duration').seconds)[metadata.has('duration')],
-                (0, video_meta.get('width'))[video_meta.has('width')],
-                (0, video_meta.get('height'))[video_meta.has('height')],
-                False,
-                supports_streaming,
-            ))
+            attrs.append(
+                DocumentAttributeVideo(
+                    (0, metadata.get("duration").seconds)[metadata.has("duration")],
+                    (0, video_meta.get("width"))[video_meta.has("width")],
+                    (0, video_meta.get("height"))[video_meta.has("height")],
+                    False,
+                    supports_streaming,
+                )
+            )
     return attrs
 
 
 def get_file_thumb(file):
-    if get_file_mime(file) == 'video':
+    if get_file_mime(file) == "video":
         return get_video_thumb(file)
 
 
 class FilesBase:
-    def __init__(self, files, thumbnail: Union[str, bool, None] = None, force_file: bool = False,
-                 caption: Union[str, None] = None):
+    def __init__(
+        self,
+        files,
+        thumbnail: Union[str, bool, None] = None,
+        force_file: bool = False,
+        caption: Union[str, None] = None,
+    ):
         self._iterator = None
         self.files = files
         self.thumbnail = thumbnail
@@ -88,12 +97,13 @@ class FilesBase:
 
 
 class RecursiveFiles(FilesBase):
-
     def get_iterator(self):
         for file in self.files:
             if os.path.isdir(file):
-                yield from map(lambda file: file.path,
-                               filter(lambda x: not x.is_dir(), scantree(file, True)))
+                yield from map(
+                    lambda file: file.path,
+                    filter(lambda x: not x.is_dir(), scantree(file, True)),
+                )
             else:
                 yield file
 
@@ -115,8 +125,13 @@ class LargeFilesBase(FilesBase):
             else:
                 yield self.process_normal_file(file)
 
-    def process_normal_file(self, file: str) -> 'File':
-        return File(file, force_file=self.force_file, thumbnail=self.thumbnail, caption=self.caption)
+    def process_normal_file(self, file: str) -> "File":
+        return File(
+            file,
+            force_file=self.force_file,
+            thumbnail=self.thumbnail,
+            caption=self.caption,
+        )
 
     def process_large_file(self, file):
         raise NotImplementedError
@@ -130,8 +145,13 @@ class NoLargeFiles(LargeFilesBase):
 class File(FileIO):
     force_file = False
 
-    def __init__(self, path: str, force_file: Union[bool, None] = None, thumbnail: Union[str, bool, None] = None,
-                 caption: Union[str, None] = None):
+    def __init__(
+        self,
+        path: str,
+        force_file: Union[bool, None] = None,
+        thumbnail: Union[str, bool, None] = None,
+        caption: Union[str, None] = None,
+    ):
         super().__init__(path)
         self.path = path
         self.force_file = self.force_file if force_file is None else force_file
@@ -148,7 +168,7 @@ class File(FileIO):
 
     @property
     def short_name(self):
-        return '.'.join(self.file_name.split('.')[:-1])
+        return ".".join(self.file_name.split(".")[:-1])
 
     @property
     def is_custom_thumbnail(self):
@@ -156,7 +176,18 @@ class File(FileIO):
 
     @property
     def file_caption(self) -> str:
-        return truncate(self._caption if self._caption is not None else self.short_name, CAPTION_MAX_LENGTH)
+        self.file_info = {
+            "file_name": self.file_name,
+            "path": self.path,
+            "short_name": self.short_name,
+            "file_size": self.file_size,
+        }
+        if self._caption is not None:
+            self.__caption = self._caption % self.file_info
+        return truncate(
+            self.__caption if self._caption is not None else self.short_name,
+            CAPTION_MAX_LENGTH,
+        )
 
     def get_thumbnail(self):
         thumb = None
@@ -164,12 +195,16 @@ class File(FileIO):
             try:
                 thumb = get_file_thumb(self.path)
             except ThumbError as e:
-                click.echo('{}'.format(e), err=True)
+                click.echo("{}".format(e), err=True)
         elif self.is_custom_thumbnail:
             if not isinstance(self._thumbnail, str):
-                raise TypeError('Invalid type for thumbnail: {}'.format(type(self._thumbnail)))
+                raise TypeError(
+                    "Invalid type for thumbnail: {}".format(type(self._thumbnail))
+                )
             elif not os.path.lexists(self._thumbnail):
-                raise TelegramInvalidFile('{} thumbnail file does not exists.'.format(self._thumbnail))
+                raise TelegramInvalidFile(
+                    "{} thumbnail file does not exists.".format(self._thumbnail)
+                )
             thumb = self._thumbnail
         return thumb
 
@@ -194,7 +229,7 @@ class SplitFile(File, FileIO):
         if size == -1:
             size = self.remaining_size
         if not self.remaining_size:
-            return b''
+            return b""
         size = min(self.remaining_size, size)
         self.remaining_size -= size
         return super().read(size)
@@ -210,14 +245,16 @@ class SplitFile(File, FileIO):
     def file_size(self):
         return self.max_read_size
 
-    def seek(self, offset: int, whence: int = SEEK_SET, split_seek: bool = False) -> int:
+    def seek(
+        self, offset: int, whence: int = SEEK_SET, split_seek: bool = False
+    ) -> int:
         if not split_seek:
             self.remaining_size += self.tell() - offset
         return super().seek(offset, whence)
 
     @property
     def short_name(self):
-        return self.file_name.split('/')[-1]
+        return self.file_name.split("/")[-1]
 
 
 class SplitFiles(LargeFilesBase):
@@ -227,7 +264,13 @@ class SplitFiles(LargeFilesBase):
         parts = math.ceil(total_size / MAX_FILE_SIZE)
         zfill = int(math.log10(10)) + 1
         for part in range(parts):
-            size = total_size - (part * MAX_FILE_SIZE) if part >= parts - 1 else MAX_FILE_SIZE
-            splitted_file = SplitFile(file, size, '{}.{}'.format(file_name, str(part).zfill(zfill)))
+            size = (
+                total_size - (part * MAX_FILE_SIZE)
+                if part >= parts - 1
+                else MAX_FILE_SIZE
+            )
+            splitted_file = SplitFile(
+                file, size, "{}.{}".format(file_name, str(part).zfill(zfill))
+            )
             splitted_file.seek(MAX_FILE_SIZE * part, split_seek=True)
             yield splitted_file
