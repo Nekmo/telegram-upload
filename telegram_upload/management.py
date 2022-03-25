@@ -145,6 +145,10 @@ def upload(files, to, config, delete_on_success, print_file_id, force_file, forw
         to = async_to_sync(interactive_select_dialog(client))
     elif to is None:
         to = 'me'
+    try:
+        to = int(to)
+    except:
+        pass
     files = filter(lambda file: is_valid_file(file, lambda message: click.echo(message, err=True)), files)
     files = DIRECTORY_MODES[directories](files)
     if directories == 'fail':
