@@ -55,13 +55,15 @@ async def interactive_select_files(client, entity: str):
 async def interactive_select_local_files():
     iterator = filter(lambda x: os.path.isfile(x) and os.path.lexists(x), os.listdir('.'))
     iterator = sync_to_async_iterator(map(lambda x: (x, x), iterator))
-    return await show_checkboxlist(iterator)
+    return await show_checkboxlist(iterator, 'Not files were found in the current directory '
+                                             '(subdirectories are not supported). Exiting...')
 
 
 async def interactive_select_dialog(client):
     iterator = client.iter_dialogs()
     iterator = amap(lambda x: (x, x.name), iterator,)
-    value = await show_radiolist(iterator)
+    value = await show_radiolist(iterator, 'Not dialogs were found in your Telegram session. '
+                                           'Have you started any conversations?')
     return value.id if value else None
 
 
@@ -139,6 +141,9 @@ def upload(files, to, config, delete_on_success, print_file_id, force_file, forw
         click.echo('Select the local files to upload:')
         click.echo('[SPACE] Select file [ENTER] Next step')
         files = async_to_sync(interactive_select_local_files())
+    if interactive and not files:
+        # No files selected. Exiting.
+        return
     if interactive and to is None:
         click.echo('Select the recipient dialog of the files:')
         click.echo('[SPACE] Select dialog [ENTER] Next step')

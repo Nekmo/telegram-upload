@@ -126,22 +126,22 @@ async def show_cli_widget(widget):
     return await app.run_async()
 
 
-async def show_checkboxlist(iterator):
+async def show_checkboxlist(iterator, not_items_error='No items were found. Exiting...'):
     # iterator = map(lambda x: (x, f'{x.text} by {x.chat.first_name}'), iterator)
     try:
         checkbox_list = IterableCheckboxList(iterator)
         await checkbox_list._init(iterator)
     except IndexError:
-        click.echo('No items were found. Exiting...', err=True)
+        click.echo(not_items_error, err=True)
         return []
     return await show_cli_widget(checkbox_list)
 
 
-async def show_radiolist(iterator):
+async def show_radiolist(iterator, not_items_error='No items were found. Exiting...'):
     try:
         radio_list = IterableRadioList(iterator)
         await radio_list._init(iterator)
     except IndexError:
-        click.echo('No items were found. Exiting...', err=True)
+        click.echo(not_items_error, err=True)
         return None
     return await show_cli_widget(radio_list)
