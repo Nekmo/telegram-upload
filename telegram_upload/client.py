@@ -175,14 +175,14 @@ class Client(TelegramClient):
             progress, bar = get_progress_bar('Uploading', file.file_name, file.file_size)
 
             thumb = file.get_thumbnail()
+            
             try:
-                try:
                     if send_as_media:
                         message = async_to_sync(self._send_media(entity, file, progress))
                     else:
                         message = self._send_file_message(entity, file, thumb, progress)
                     messages.append(message)
-                finally:
+            finally:
                     bar.render_finish()
 
             if print_file_id:
