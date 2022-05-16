@@ -185,7 +185,7 @@ class Client(TelegramClient):
                 finally:
                     bar.render_finish()
             finally:
-                if thumb and file.is_custom_thumbnail:
+                if thumb and not file.is_custom_thumbnail:
                     os.remove(thumb)
             if print_file_id:
                 click.echo('Uploaded successfully "{}" (file_id {})'.format(file.file_name,
