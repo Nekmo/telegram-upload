@@ -94,6 +94,7 @@ Features
 * Download files.
 * Add video thumbs.
 * Delete local or remote file on success.
+* File name, path in caption
 
 Docker
 ======

@@ -176,8 +176,11 @@ class File(FileIO):
 
     @property
     def file_caption(self) -> str:
+        path = self.path
+        if path.startswith("./"):
+            path = path[2:]
         self.file_info = {
-            "path": self.path.removeprefix("./"),
+            "path": path,
             "file_name": self.file_name,
             "short_name": self.short_name,
         }

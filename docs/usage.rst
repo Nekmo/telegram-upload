@@ -117,3 +117,12 @@ An example without credentials::
 An example with credentials::
 
     socks4://user:pass@proxy.my.site:1080
+
+
+Upload with directory structure
+===============================
+You can use caption variables to upload entire directory with path as cption.
+
+To upload all files and directories under current directory with path caption::
+
+    $ telegram-upload . --directories recursive --caption "{path}"

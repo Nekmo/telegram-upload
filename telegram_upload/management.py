@@ -114,7 +114,8 @@ class MutuallyExclusiveOption(click.Option):
 @click.option('--large-files', default='fail', type=click.Choice(list(LARGE_FILE_MODES.keys())),
               help='Defines how to process large files unsupported for Telegram. By default large files are not '
                    'accepted and will raise an error.')
-@click.option('--caption', type=str, help='Change file description. By default the file name.')
+@click.option('--caption', type=str, help='Change file description. By default the short name. '
+                                          'Use variables {path}, {short_name}, {file_name} in caption.')
 @click.option('--no-thumbnail', is_flag=True, cls=MutuallyExclusiveOption, mutually_exclusive=["thumbnail_file"],
               help='Disable thumbnail generation. For some known file formats, Telegram may still generate a '
                    'thumbnail or show a preview.')
