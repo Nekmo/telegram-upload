@@ -146,8 +146,9 @@ def upload(files, to, config, delete_on_success, print_file_id, force_file, forw
     elif to is None:
         to = 'me'
     try:
+        # For chat id
         to = int(to)
-    except:
+    except ValueError:
         pass
     files = filter(lambda file: is_valid_file(file, lambda message: click.echo(message, err=True)), files)
     files = DIRECTORY_MODES[directories](files)
