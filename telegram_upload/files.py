@@ -177,13 +177,12 @@ class File(FileIO):
     @property
     def file_caption(self) -> str:
         self.file_info = {
+            "path": self.path.removeprefix("./"),
             "file_name": self.file_name,
-            "path": self.path,
             "short_name": self.short_name,
-            "file_size": self.file_size,
         }
         if self._caption is not None:
-            self.__caption = self._caption % self.file_info
+            self.__caption = self._caption.format_map(self.file_info)
         return truncate(
             self.__caption if self._caption is not None else self.short_name,
             CAPTION_MAX_LENGTH,
