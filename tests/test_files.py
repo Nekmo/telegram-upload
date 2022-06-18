@@ -44,8 +44,12 @@ class TestRecursiveFiles(unittest.TestCase):
         directory.is_dir.side_effect = [True, False]
         file = Mock()
         file.is_dir.return_value = False
+        file.stat.return_value.st_size = 1
         side_effect = [file] * 3
-        m2.return_value = side_effect
+        empty_file = Mock()
+        empty_file.is_dir.return_value = False
+        empty_file.stat.return_value.st_size = 0
+        m2.return_value = side_effect + [empty_file]
         self.assertEqual(list(RecursiveFiles(["foo"])), [x.path for x in side_effect])
 
 
