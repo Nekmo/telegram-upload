@@ -102,7 +102,10 @@ class RecursiveFiles(FilesBase):
             if os.path.isdir(file):
                 yield from map(
                     lambda file: file.path,
-                    filter(lambda x: not x.is_dir(), scantree(file, True)),
+                    filter(
+                        lambda x: not x.is_dir() and x.stat().st_size,
+                        scantree(file, True),
+                    ),
                 )
             else:
                 yield file
