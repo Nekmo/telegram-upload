@@ -113,6 +113,11 @@ class Client(TelegramClient):
             raise InvalidApiFileError(self.config_file)
 
     async def _send_album_media(self, entity, media):
+        self.get_dialogs()
+        try:
+            entity = int(entity)
+        except:
+            pass
         entity = await self.get_input_entity(entity)
         request = functions.messages.SendMultiMediaRequest(
             entity, reply_to_msg_id=None, multi_media=media,
@@ -130,6 +135,11 @@ class Client(TelegramClient):
             async_to_sync(self._send_album_media(entity, media))
 
     def _send_file_message(self, entity, file, thumb, progress):
+        self.get_dialogs()
+        try:
+            entity = int(entity)
+        except:
+            pass
         message = self.send_file(entity, file, thumb=thumb,
                                  file_size=file.file_size if isinstance(file, File) else None,
                                  caption=file.file_caption, force_document=file.force_file,
@@ -141,6 +151,11 @@ class Client(TelegramClient):
         return message
 
     async def _send_media(self, entity, file: File, progress):
+        self.get_dialogs()
+        try:
+            entity = int(entity)
+        except:
+            pass
         entity = await self.get_input_entity(entity)
         supports_streaming = False  # TODO
         fh, fm, _ = await self._file_to_media(
