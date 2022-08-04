@@ -113,7 +113,7 @@ class Client(TelegramClient):
             raise InvalidApiFileError(self.config_file)
 
     async def _send_album_media(self, entity, media):
-        self.get_dialogs()
+        await self.get_dialogs()
         try:
             entity = int(entity)
         except:
