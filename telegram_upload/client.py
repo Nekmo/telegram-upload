@@ -151,7 +151,7 @@ class Client(TelegramClient):
         return message
 
     async def _send_media(self, entity, file: File, progress):
-        self.get_dialogs()
+        await self.get_dialogs()
         try:
             entity = int(entity)
         except:
