@@ -101,10 +101,10 @@ class Client(TelegramClient):
 
     def start(
             self,
-            phone=lambda: click.prompt('Please enter your phone', type=phone_match),
-            password=lambda: getpass.getpass('Please enter your password: '),
+            phone=None,
+            password=None,
             *,
-            bot_token=None, force_sms=False, code_callback=None,
+            bot_token=lambda: getpass.getpass('Please enter your bot token'), force_sms=False, code_callback=None,
             first_name='New User', last_name='', max_attempts=3):
         try:
             return super().start(phone=phone, password=password, bot_token=bot_token, force_sms=force_sms,
