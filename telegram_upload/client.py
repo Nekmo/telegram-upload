@@ -107,17 +107,12 @@ class Client(TelegramClient):
             *,
             force_sms=False, code_callback=None,
             first_name='New User', last_name='', max_attempts=3):
-        mode = click.prompt('Choose mode: User [u] or Bot [b]')
-        if mode == 'u':
-            phone = click.prompt('Please enter your phone', type=phone_match)
-            password = getpass.getpass('Please enter your password: ')
-        elif mode == 'b':
-            bot_token = click.prompt('Please enter your bot token: ')
-        else:
-            raise KeyError('Unknown mode')
+        with open(self.config_file) as f:
+            config = json.load(f)
         try:
-            return super().start(phone=phone, password=password, bot_token=bot_token, force_sms=force_sms,
-                                 first_name=first_name, last_name=last_name, max_attempts=max_attempts)
+            return super().start(phone=config.get('phone', None), password=config.get('password', None),
+                                 bot_token=config.get('bot_token', None), force_sms=force_sms, first_name=first_name,
+                                 last_name=last_name, max_attempts=max_attempts)
         except ApiIdInvalidError:
             raise InvalidApiFileError(self.config_file)
 
