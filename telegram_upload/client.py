@@ -101,11 +101,20 @@ class Client(TelegramClient):
 
     def start(
             self,
+            bot_token=None,
             phone=None,
             password=None,
             *,
-            bot_token=lambda: getpass.getpass('Please enter your bot token'), force_sms=False, code_callback=None,
+            force_sms=False, code_callback=None,
             first_name='New User', last_name='', max_attempts=3):
+        mode = click.prompt('Choose mode: User [u] or Bot [b]')
+        if mode == 'u':
+            phone = click.prompt('Please enter your phone', type=phone_match)
+            password = getpass.getpass('Please enter your password: ')
+        elif mode == 'b':
+            bot_token = click.prompt('Please enter your bot token: ')
+        else:
+            raise KeyError('Unknown mode')
         try:
             return super().start(phone=phone, password=password, bot_token=bot_token, force_sms=force_sms,
                                  first_name=first_name, last_name=last_name, max_attempts=max_attempts)
