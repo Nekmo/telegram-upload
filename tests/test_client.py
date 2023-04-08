@@ -9,7 +9,7 @@ from telethon.tl.types import DocumentAttributeFilename
 from telegram_upload.client import Client, parse_proxy_string, phone_match
 from telegram_upload.exceptions import TelegramUploadDataLoss, TelegramUploadNoSpaceError, TelegramProxyError, \
     MissingFileError
-from telegram_upload.files import File
+from telegram_upload.upload_files import File
 
 CONFIG_DATA = {'api_hash': '', 'api_id': ''}
 

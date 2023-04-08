@@ -11,13 +11,13 @@ import os
 from telethon.errors import ApiIdInvalidError
 from telethon.network import ConnectionTcpMTProxyRandomizedIntermediate
 from telethon.tl import types, functions
-from telethon.tl.types import Message, DocumentAttributeFilename, InputMessagesFilterDocument
+from telethon.tl.types import Message, DocumentAttributeFilename
 from telethon.utils import pack_bot_file_id
 
 from telegram_upload.config import SESSION_FILE
 from telegram_upload.exceptions import TelegramUploadDataLoss, TelegramUploadNoSpaceError, \
     TelegramProxyError, MissingFileError, InvalidApiFileError
-from telegram_upload.files import File
+from telegram_upload.upload_files import File
 from telethon.version import __version__ as telethon_version
 from telethon import TelegramClient, utils
 
@@ -210,8 +210,10 @@ class Client(TelegramClient):
             if message.document:
                 yield message
 
-    def download_files(self, entity, messages: Iterable[Message], delete_on_success: bool = False):
+    def download_files(self, entity, messages: Iterable[Message], delete_on_success: bool = False,
+                       join_files: bool = True):
         messages = reversed(list(messages))
+
         for message in messages:
             filename_attr = get_message_file_attribute(message)
             filename = filename_attr.file_name if filename_attr else 'Unknown'

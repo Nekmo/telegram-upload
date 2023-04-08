@@ -65,7 +65,7 @@ def get_file_thumb(file):
         return get_video_thumb(file)
 
 
-class FilesBase:
+class UploadFilesBase:
     def __init__(self, files, thumbnail: Union[str, bool, None] = None, force_file: bool = False,
                  caption: Union[str, None] = None):
         self._iterator = None
@@ -87,7 +87,7 @@ class FilesBase:
         return next(self._iterator)
 
 
-class RecursiveFiles(FilesBase):
+class RecursiveFiles(UploadFilesBase):
 
     def get_iterator(self):
         for file in self.files:
@@ -98,7 +98,7 @@ class RecursiveFiles(FilesBase):
                 yield file
 
 
-class NoDirectoriesFiles(FilesBase):
+class NoDirectoriesFiles(UploadFilesBase):
     def get_iterator(self):
         for file in self.files:
             if os.path.isdir(file):
@@ -107,7 +107,7 @@ class NoDirectoriesFiles(FilesBase):
                 yield file
 
 
-class LargeFilesBase(FilesBase):
+class LargeFilesBase(UploadFilesBase):
     def get_iterator(self):
         for file in self.files:
             if os.path.getsize(file) > MAX_FILE_SIZE:
