@@ -1,5 +1,5 @@
 from functools import cached_property
-from typing import Iterable
+from typing import Iterable, Iterator
 
 from telethon.tl.types import Message, DocumentAttributeFilename
 
@@ -24,24 +24,8 @@ JOIN_STRATEGIES = [
 ]
 
 
-class DownloadFilesBase:
-    def __init__(self, messages: Iterable[Message]):
-        self.messages = messages
-
-    def get_iterator(self):
-        raise NotImplementedError
-
-    def __iter__(self):
-        self._iterator = self.get_iterator()
-        return self
-
-    def __next__(self):
-        if self._iterator is None:
-            self._iterator = self.get_iterator()
-        return next(self._iterator)
-
-
 class DownloadFile:
+    """File to download. This includes the Telethon message with the file."""
     def __init__(self, message: Message):
         self.message = message
 
@@ -54,18 +38,39 @@ class DownloadFile:
     def file_name(self):
         return self.filename_attr.file_name
 
+    @property
+    def document(self):
+        return self.message.document
 
-class DownloadFiles(DownloadFilesBase):
+    @property
+    def size(self):
+        return self.document.size
+
+
+class DownloadSplitFilesBase:
+    """Iterate over complete and split files. Base class to inherit."""
+    def __init__(self, messages: Iterable[Message]):
+        self.messages = messages
+
+    def get_iterator(self) -> Iterator[DownloadFile]:
+        raise NotImplementedError
+
+    def __iter__(self):
+        self._iterator = self.get_iterator()
+        return self
+
+    def __next__(self):
+        if self._iterator is None:
+            self._iterator = self.get_iterator()
+        return next(self._iterator)
+
+
+class KeepDownloadSplitFiles(DownloadSplitFilesBase):
+    def get_iterator(self) -> Iterator[DownloadFile]:
+        return map(lambda message: DownloadFile(message), self.messages)
+
+
+class JoinDownloadSplitFiles(DownloadSplitFilesBase):
+
     def get_iterator(self):
-        return map(lambda x: (x, None), self.files)
-
-
-class JoinDownloadFiles(DownloadFilesBase):
-    def __init__(self, files):
-        self.files = []
-        files_by_name = {}
-        for file in files:
-            file.rsplit(".")
-
-    def get_iterator(self):
-        return map(lambda x: (x, None), self.files)
+        return map(lambda x: (x, None), self.messages)

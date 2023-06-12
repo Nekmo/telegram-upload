@@ -9,6 +9,7 @@ from telethon.tl.types import User
 from telegram_upload.cli import show_checkboxlist, show_radiolist
 from telegram_upload.client import Client, get_message_file_attribute
 from telegram_upload.config import default_config, CONFIG_FILE
+from telegram_upload.download_files import KeepDownloadSplitFiles, JoinDownloadSplitFiles
 from telegram_upload.exceptions import catch
 from telegram_upload.upload_files import NoDirectoriesFiles, RecursiveFiles, NoLargeFiles, SplitFiles, is_valid_file
 
@@ -21,6 +22,10 @@ DIRECTORY_MODES = {
 LARGE_FILE_MODES = {
     'fail': NoLargeFiles,
     'split': SplitFiles,
+}
+DOWNLOAD_SPLIT_FILE_MODES = {
+    'keep': KeepDownloadSplitFiles,
+    'join': JoinDownloadSplitFiles,
 }
 
 
@@ -181,11 +186,11 @@ def upload(files, to, config, delete_on_success, print_file_id, force_file, forw
 @click.option('-p', '--proxy', default=None,
               help='Use an http proxy, socks4, socks5 or mtproxy. For example socks5://user:pass@1.2.3.4:8080 '
                    'for socks5 and mtproxy://secret@1.2.3.4:443 for mtproxy.')
-@click.option('-m', '--join-files', is_flag=True,
-              help='Join the files that are detected as divided by their extension.')
+@click.option('-m', '--split-files', default='keep', type=click.Choice(list(DOWNLOAD_SPLIT_FILE_MODES.keys())),
+              help='Defines how to download large files split in Telegram. By default the files are not merged.')
 @click.option('-i', '--interactive', is_flag=True,
               help='Use interactive mode.')
-def download(from_, config, delete_on_success, proxy, join_files, interactive):
+def download(from_, config, delete_on_success, proxy, split_files, interactive):
     """Download all the latest messages that are files in a chat, by default download
     from "saved messages". It is recommended to forward the files to download to
     "saved messages" and use parameter ``--delete-on-success``. Forwarded messages will
@@ -205,7 +210,9 @@ def download(from_, config, delete_on_success, proxy, join_files, interactive):
         messages = async_to_sync(interactive_select_files(client, from_))
     else:
         messages = client.find_files(from_)
-    client.download_files(from_, messages, delete_on_success, join_files)
+    messages_cls = DOWNLOAD_SPLIT_FILE_MODES[split_files]
+    download_files = messages_cls(messages)
+    client.download_files(from_, download_files, delete_on_success)
 
 
 upload_cli = catch(upload)

@@ -15,6 +15,7 @@ from telethon.tl.types import Message, DocumentAttributeFilename
 from telethon.utils import pack_bot_file_id
 
 from telegram_upload.config import SESSION_FILE
+from telegram_upload.download_files import DownloadFile
 from telegram_upload.exceptions import TelegramUploadDataLoss, TelegramUploadNoSpaceError, \
     TelegramProxyError, MissingFileError, InvalidApiFileError
 from telegram_upload.upload_files import File
@@ -210,26 +211,24 @@ class Client(TelegramClient):
             if message.document:
                 yield message
 
-    def download_files(self, entity, messages: Iterable[Message], delete_on_success: bool = False,
-                       join_files: bool = True):
-        messages = reversed(list(messages))
+    def download_files(self, entity, download_files: Iterable[DownloadFile], delete_on_success: bool = False):
+        download_files = reversed(list(download_files))
 
-        for message in messages:
-            filename_attr = get_message_file_attribute(message)
-            filename = filename_attr.file_name if filename_attr else 'Unknown'
-            if message.document.size > free_disk_usage():
+        for download_file in download_files:
+            filename = download_file.filename_attr.file_name if download_file.filename_attr else 'Unknown'
+            if download_file.size > free_disk_usage():
                 raise TelegramUploadNoSpaceError(
                     'There is no disk space to download "{}". Space required: {}'.format(
-                        filename, sizeof_fmt(message.document.size - free_disk_usage())
+                        filename, sizeof_fmt(download_file.size - free_disk_usage())
                     )
                 )
-            progress, bar = get_progress_bar('Downloading', filename, message.document.size)
+            progress, bar = get_progress_bar('Downloading', filename, download_file.size)
             try:
-                self.download_media(message, progress_callback=progress)
+                self.download_media(download_file.message, progress_callback=progress)
             finally:
                 bar.render_finish()
             if delete_on_success:
-                self.delete_messages(entity, [message])
+                self.delete_messages(entity, [download_file.message])
 
     def forward_to(self, message, destinations):
         for destination in destinations:
