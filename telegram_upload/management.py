@@ -211,7 +211,7 @@ def download(from_, config, delete_on_success, proxy, split_files, interactive):
     else:
         messages = client.find_files(from_)
     messages_cls = DOWNLOAD_SPLIT_FILE_MODES[split_files]
-    download_files = messages_cls(messages)
+    download_files = messages_cls(reversed(list(messages)))
     client.download_files(from_, download_files, delete_on_success)
 
 

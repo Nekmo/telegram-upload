@@ -212,20 +212,21 @@ class Client(TelegramClient):
                 yield message
 
     def download_files(self, entity, download_files: Iterable[DownloadFile], delete_on_success: bool = False):
-        download_files = reversed(list(download_files))
-
         for download_file in download_files:
-            filename = download_file.filename_attr.file_name if download_file.filename_attr else 'Unknown'
             if download_file.size > free_disk_usage():
                 raise TelegramUploadNoSpaceError(
                     'There is no disk space to download "{}". Space required: {}'.format(
-                        filename, sizeof_fmt(download_file.size - free_disk_usage())
+                        download_file.file_name, sizeof_fmt(download_file.size - free_disk_usage())
                     )
                 )
-            progress, bar = get_progress_bar('Downloading', filename, download_file.size)
+            progress, bar = get_progress_bar('Downloading', download_file.file_name, download_file.size)
+            file_name = download_file.file_name
             try:
-                self.download_media(download_file.message, progress_callback=progress)
+                file_name = self.download_media(download_file.message, progress_callback=progress)
+                download_file.set_download_file_name(file_name)
             finally:
+                bar.label = f'Downloaded  "{file_name}"'
+                bar.update(1, 1)
                 bar.render_finish()
             if delete_on_success:
                 self.delete_messages(entity, [download_file.message])
