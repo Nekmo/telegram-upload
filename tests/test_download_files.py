@@ -1,3 +1,4 @@
+import sys
 import unittest
 from io import BytesIO
 from unittest.mock import patch, MagicMock, call
@@ -122,6 +123,7 @@ class TestDownloadFile(unittest.TestCase):
             download_file = DownloadFile(mock_download_file)
             self.assertIsNone(download_file.filename_attr)
 
+    @unittest.skipIf(sys.version_info < (3, 8), "Unsupported in Python 3.7")
     def test_file_name(self):
         file_name = "file_name"
         download_file = DownloadFile(MagicMock())
@@ -131,6 +133,7 @@ class TestDownloadFile(unittest.TestCase):
         with self.subTest("Return unknown"):
             self.assertEqual("Unknown", download_file.file_name)
 
+    @unittest.skipIf(sys.version_info < (3, 8), "Unsupported in Python 3.7")
     def test_file_name_extension(self):
         file_name = "file_name.tar"
         download_file = DownloadFile(MagicMock())
