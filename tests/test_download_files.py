@@ -2,7 +2,10 @@ import unittest
 from io import BytesIO
 from unittest.mock import patch, MagicMock, call
 
-from telegram_upload.download_files import pipe_file, CHUNK_FILE_SIZE, JoinStrategyBase, UnionJoinStrategy
+from telethon.tl.types import DocumentAttributeFilename
+
+from telegram_upload.download_files import pipe_file, CHUNK_FILE_SIZE, JoinStrategyBase, UnionJoinStrategy, \
+    get_join_strategy, DownloadFile
 
 
 class TestPipeFile(unittest.TestCase):
@@ -88,3 +91,68 @@ class TestUnionJoinStrategy(unittest.TestCase):
             mock_open.reset_mock()
             strategy.join_download_files()
             mock_open.assert_not_called()
+
+
+class TestGetJoinStrategy(unittest.TestCase):
+    def test_get_join_strategy(self):
+        mock_download_file = MagicMock()
+        strategies = [MagicMock()]
+        with patch("telegram_upload.download_files.JOIN_STRATEGIES", strategies):
+            strategy = get_join_strategy(mock_download_file)
+            self.assertEqual(strategies[0].return_value, strategy)
+            strategies[0].is_applicable.assert_called_once_with(mock_download_file)
+            strategies[0].return_value.add_download_file.assert_called_once_with(mock_download_file)
+
+
+class TestDownloadFile(unittest.TestCase):
+    def test_set_download_file_name(self):
+        download_file = DownloadFile(MagicMock())
+        download_file_name = "download_file_name"
+        download_file.set_download_file_name(download_file_name)
+        self.assertEqual(download_file_name, download_file.downloaded_file_name)
+
+    def test_filename_attr(self):
+        with self.subTest("Found attribute"):
+            attribute = DocumentAttributeFilename("file_name")
+            mock_download_file = MagicMock(**{'document.attributes': [attribute]})
+            download_file = DownloadFile(mock_download_file)
+            self.assertEqual(attribute, download_file.filename_attr)
+        with self.subTest("Missing attribute"):
+            mock_download_file = MagicMock(**{'document.attributes': []})
+            download_file = DownloadFile(mock_download_file)
+            self.assertIsNone(download_file.filename_attr)
+
+    def test_file_name(self):
+        file_name = "file_name"
+        download_file = DownloadFile(MagicMock())
+        with patch.object(download_file, 'filename_attr', file_name=file_name), self.subTest("Return file name"):
+            self.assertEqual(file_name, download_file.file_name)
+        download_file = DownloadFile(MagicMock(**{'document.attributes': []}))
+        with self.subTest("Return unknown"):
+            self.assertEqual("Unknown", download_file.file_name)
+
+    def test_file_name_extension(self):
+        file_name = "file_name.tar"
+        download_file = DownloadFile(MagicMock())
+        with patch.object(download_file, 'filename_attr', file_name=file_name), \
+                self.subTest("Return extension file name"):
+            self.assertEqual("tar", download_file.file_name_extension)
+        download_file = DownloadFile(MagicMock(**{'document.attributes': []}))
+        with self.subTest("Empty extension"):
+            self.assertEqual("", download_file.file_name_extension)
+
+    def test_document(self):
+        mock_mesage = MagicMock()
+        download_file = DownloadFile(mock_mesage)
+        self.assertEqual(mock_mesage.document, download_file.document)
+
+    def test_size(self):
+        mock_mesage = MagicMock()
+        download_file = DownloadFile(mock_mesage)
+        self.assertEqual(mock_mesage.document.size, download_file.document.size)
+
+    def test_eq(self):
+        mock_mesage = MagicMock()
+        download_file = DownloadFile(mock_mesage)
+        download_file2 = DownloadFile(mock_mesage)
+        self.assertEqual(download_file, download_file2)
