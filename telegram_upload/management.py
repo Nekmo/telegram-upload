@@ -12,8 +12,14 @@ from telegram_upload.config import default_config, CONFIG_FILE
 from telegram_upload.download_files import KeepDownloadSplitFiles, JoinDownloadSplitFiles
 from telegram_upload.exceptions import catch
 from telegram_upload.upload_files import NoDirectoriesFiles, RecursiveFiles, NoLargeFiles, SplitFiles, is_valid_file
-
 from telegram_upload.utils import async_to_sync, amap, sync_to_async_iterator
+
+
+try:
+    from natsort import natsorted
+except ImportError:
+    natsorted = None
+
 
 DIRECTORY_MODES = {
     'fail': NoDirectoriesFiles,
@@ -134,8 +140,10 @@ class MutuallyExclusiveOption(click.Option):
               help='Send video or photos as an album.')
 @click.option('-i', '--interactive', is_flag=True,
               help='Use interactive mode.')
+@click.option('--sort', is_flag=True,
+              help='Sort files by name before upload it. Install the natsort Python package for natural sorting.')
 def upload(files, to, config, delete_on_success, print_file_id, force_file, forward, directories, large_files, caption,
-           no_thumbnail, thumbnail_file, proxy, album, interactive):
+           no_thumbnail, thumbnail_file, proxy, album, interactive, sort):
     """Upload one or more files to Telegram using your personal account.
     The maximum file size is 2 GiB and by default they will be saved in
     your saved messages.
@@ -173,6 +181,10 @@ def upload(files, to, config, delete_on_success, print_file_id, force_file, forw
         files = list(files)
     if to.lstrip("-+").isdigit():
         to = int(to)
+    if sort and natsorted:
+        files = natsorted(files, key=lambda x: x.name)
+    elif sort:
+        files = sorted(files, key=lambda x: x.name)
     if album:
         client.send_files_as_album(to, files, delete_on_success, print_file_id, forward)
     else:
