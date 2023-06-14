@@ -183,10 +183,10 @@ class Client(TelegramClient):
                 bar.render_finish()
         except RPCError as e:
             if retries > 0:
-                click.echo(f'The file "{file.file_name}" could not be uploaded: {e}. Retrying...')
+                click.echo(f'The file "{file.file_name}" could not be uploaded: {e}. Retrying...', err=True)
                 message = self.send_one_file(entity, file, send_as_media, thumb, retries - 1)
             else:
-                click.echo(f'The file "{file.file_name}" could not be uploaded: {e}. It will not be retried.')
+                click.echo(f'The file "{file.file_name}" could not be uploaded: {e}. It will not be retried.', err=True)
         return message
 
     def send_files(self, entity, files: Iterable[File], delete_on_success=False, print_file_id=False,
@@ -203,13 +203,14 @@ class Client(TelegramClient):
                     os.remove(thumb)
             if message is None:
                 click.echo('Failed to upload file "{}"'.format(file.file_name), err=True)
-            if print_file_id:
+            if message and print_file_id:
                 click.echo('Uploaded successfully "{}" (file_id {})'.format(file.file_name,
                                                                             pack_bot_file_id(message.media)))
-            if delete_on_success:
+            if message and delete_on_success:
                 click.echo('Deleting "{}"'.format(file))
                 os.remove(file.path)
-            self.forward_to(message, forward)
+            if message:
+                self.forward_to(message, forward)
         if not has_files:
             raise MissingFileError('Files do not exist.')
         return messages
