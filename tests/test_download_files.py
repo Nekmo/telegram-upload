@@ -6,7 +6,7 @@ from unittest.mock import patch, MagicMock, call
 from telethon.tl.types import DocumentAttributeFilename
 
 from telegram_upload.download_files import pipe_file, CHUNK_FILE_SIZE, JoinStrategyBase, UnionJoinStrategy, \
-    get_join_strategy, DownloadFile
+    get_join_strategy, DownloadFile, KeepDownloadSplitFiles, JoinDownloadSplitFiles
 
 
 class TestPipeFile(unittest.TestCase):
@@ -159,3 +159,55 @@ class TestDownloadFile(unittest.TestCase):
         download_file = DownloadFile(mock_mesage)
         download_file2 = DownloadFile(mock_mesage)
         self.assertEqual(download_file, download_file2)
+
+
+class TestKeepDownloadSplitFiles(unittest.TestCase):
+    def test_get_iterator(self):
+        mock_messages = [MagicMock()]
+        keep_download_split_files = KeepDownloadSplitFiles(mock_messages)
+        download_files = list(keep_download_split_files)
+        self.assertIsInstance(download_files[0], DownloadFile)
+        self.assertEqual(mock_messages[0], download_files[0].message)
+
+
+class TestJoinDownloadSplitFiles(unittest.TestCase):
+    @patch("telegram_upload.download_files.get_join_strategy")
+    def test_get_iterator_without_strategy(self, mock_get_join_strategy: MagicMock):
+        """Test a download file without a valid strategy. The file is outside the supported
+        files to unzip.
+        """
+        mock_messages = [MagicMock()]
+        mock_get_join_strategy.return_value = False
+        join_download_split_files = JoinDownloadSplitFiles(mock_messages)
+        download_files = list(join_download_split_files)
+        self.assertIsInstance(download_files[0], DownloadFile)
+        self.assertEqual(mock_messages[0], download_files[0].message)
+
+    @patch("telegram_upload.download_files.get_join_strategy")
+    def test_get_iterator_with_strategy(self, mock_get_join_strategy: MagicMock):
+        """Test two related download files with a valid strategy. The files are unzipped."""
+        mock_messages = [MagicMock(), MagicMock()]
+        mock_strategy = MagicMock()
+        mock_get_join_strategy.return_value = mock_strategy
+        join_download_split_files = JoinDownloadSplitFiles(mock_messages)
+        download_files = list(join_download_split_files)
+        self.assertIsInstance(download_files[0], DownloadFile)
+        self.assertEqual(mock_messages[0], download_files[0].message)
+        mock_strategy.add_download_file.assert_called_once_with(download_files[1])
+        mock_strategy.join_download_files.assert_called_once()
+
+    @patch("telegram_upload.download_files.get_join_strategy")
+    def test_get_iterator_with_strategy_and_other_file(self, mock_get_join_strategy: MagicMock):
+        """Test two related download files with a valid strategy, and other unsupported file.
+        Unzip the latest download file after detect an unsupported file.
+        """
+        mock_messages = [MagicMock(), MagicMock(), MagicMock()]
+        mock_strategy = MagicMock()
+        mock_strategy.is_part.side_effect = [True, False, False]
+        mock_get_join_strategy.side_effect = [mock_strategy, False]
+        join_download_split_files = JoinDownloadSplitFiles(mock_messages)
+        download_files = list(join_download_split_files)
+        self.assertIsInstance(download_files[0], DownloadFile)
+        self.assertEqual(mock_messages[0], download_files[0].message)
+        mock_strategy.add_download_file.assert_called_once_with(download_files[1])
+        mock_strategy.join_download_files.assert_called_once()
