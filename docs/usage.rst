@@ -117,3 +117,38 @@ An example without credentials::
 An example with credentials::
 
     socks4://user:pass@proxy.my.site:1080
+
+Split files
+===========
+By default, when trying to **upload** a file larger than the supported size by Telegram, an error will occur. However,
+*Telegram-upload* has different policies for large files using the ``--large-files`` parameter:
+
+* ``fail`` (default): The execution of telegram-upload is stopped and the uploads are not continued.
+* ``split``: The files are split as parts. For example *myfile.tar.00*, *myfile.tar.01*...
+
+The syntax is:
+
+.. code-block::
+
+    ~$ telegram-upload --large-files <fail|split>
+
+To join the split files using the *split* option, you can use in GNU/Linux:
+
+.. code-block:: bash
+
+    ~ $ cat myfile.tar.* > myfile.tar
+
+In windows there are different programs like `7z <https://7-zip.org/>`_ or `GSplit <https://www.gdgsoft.com/gsplit>`_.
+
+*Telegram-upload* when downloading split files by default will download the files without joining them. However, the
+**download** policy can be changed using the ``--split-files`` parameter:
+
+* ``keep`` (default): Files are downloaded without joining.
+* ``join``: Downloaded files are merged after downloading. In case of errors, such as missing files, the keep policy
+  is used.
+
+The syntax is:
+
+.. code-block::
+
+    ~$ telegram-download --split-files <keep|join>
