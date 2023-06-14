@@ -5,7 +5,7 @@
 |
 
 
-.. image:: https://img.shields.io/github/workflow/status/Nekmo/telegram-upload/Tests.svg?style=flat-square&maxAge=2592000
+.. image:: https://img.shields.io/github/actions/workflow/status/Nekmo/telegram-upload/test.yml?style=flat-square&maxAge=2592000&branch=master
   :target: https://github.com/Nekmo/telegram-upload/actions?query=workflow%3ATests
   :alt: Latest Tests CI build status
 
