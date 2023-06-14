@@ -11,6 +11,32 @@ Usage
    :prog: telegram-download
    :show-nested:
 
+Set recipient or sender
+=======================
+By default when using *telegram-upload* without specifying the recipient or sender, *telegram-upload* will use your
+personal chat. This is especially useful because you can use it to upload files from telegram-upload and then forward
+them from your personal chat to as many groups as you like. However you can define the destination. For file upload the
+argument is ``--to <entity>``:
+
+.. code-block::
+
+    ~ $ telegram-upload --to <entity> <file 1>[ <file 2>]
+
+You can *download files* from a specific chat using the ``--from <entity>`` parameter:
+
+.. code-block::
+
+    ~ $ telegram-download --from <entity>
+
+The entity can be defined in multiple ways:
+
+* **Username or groupname**: use the public username or groupname. For example: *john*.
+* **Public link**: the public user or group link. For example: *https://telegram.dog/john*.
+* **Private link**: the private group link. For example: *telegram.me/joinchat/AAAAAEkk2WdoDrB4-Q8-gg*.
+* **Telephone**: the user telephone. For example: *+34600000000*.
+* **Telegram id**: the user or group telegram id. Use a bot like *@getidsbot* for get the id. For example: *-987654321*
+  or *123456789*.
+
 Interactive mode
 ================
 Use the ``-i`` (or ``--interactive``) option to activate the **interactive mode** to choose the dialog (chat,
@@ -151,4 +177,4 @@ The syntax is:
 
 .. code-block::
 
-    ~$ telegram-download --split-files <keep|join>
+    ~ $ telegram-download --split-files <keep|join>
