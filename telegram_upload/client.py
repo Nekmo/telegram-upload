@@ -1,6 +1,7 @@
 import getpass
 import json
 import re
+import time
 from distutils.version import StrictVersion
 from typing import Iterable, Union, Optional
 from urllib.parse import urlparse
@@ -8,10 +9,10 @@ from urllib.parse import urlparse
 import click
 import os
 
-from telethon.errors import ApiIdInvalidError, RPCError
+from telethon.errors import ApiIdInvalidError, RPCError, FloodWaitError
 from telethon.network import ConnectionTcpMTProxyRandomizedIntermediate
 from telethon.tl import types, functions
-from telethon.tl.types import Message, DocumentAttributeFilename
+from telethon.tl.types import DocumentAttributeFilename
 from telethon.utils import pack_bot_file_id
 
 from telegram_upload.config import SESSION_FILE
@@ -181,6 +182,10 @@ class Client(TelegramClient):
                     message = self._send_file_message(entity, file, thumb, progress)
             finally:
                 bar.render_finish()
+        except FloodWaitError as e:
+            click.echo(f'{e}. Waiting for {e.seconds} seconds.', err=True)
+            time.sleep(e.seconds)
+            message = self.send_one_file(entity, file, send_as_media, thumb, retries)
         except RPCError as e:
             if retries > 0:
                 click.echo(f'The file "{file.file_name}" could not be uploaded: {e}. Retrying...', err=True)
