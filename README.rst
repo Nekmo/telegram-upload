@@ -86,7 +86,6 @@ a **terminal wizard**. It even **supports mouse**!
     $ telegram-download --interactive  # Interactive download
 
 
-
 Features
 ========
 
@@ -94,6 +93,7 @@ Features
 * Download files.
 * Add video thumbs.
 * Delete local or remote file on success.
+* ... And more.
 
 Docker
 ======
