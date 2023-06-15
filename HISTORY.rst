@@ -2,6 +2,24 @@
 History
 =======
 
+0.6.0 (2023-06-15)
+------------------
+
+* Issue #99: Combine split files when downloading
+* Issue #118: Feature Request - Choose channel by ID
+* Issue #113: Numbered files are uploaded in weird order
+* Issue #111: telethon.errors.rpcerrorlist.FloodWaitError: A wait of 819 seconds is required (caused by CheckChatInviteRequest)
+* Issue #108: RPCError 400: INPUT_GZIP_INVALID
+* Issue #193: Remove Python 3.6 support
+* Issue #194: Python 3.11 support.
+
+0.5.1 (2022-05-18)
+------------------
+
+* Issue #154: Python classifiers for Python 3.1.0
+* Issue #151: Error while uploading files
+* Issue #121: Thumbnail gets auto deleted
+
 0.5.0 (2022-02-27)
 ------------------
 
