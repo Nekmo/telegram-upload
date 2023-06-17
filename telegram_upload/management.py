@@ -179,7 +179,7 @@ def upload(files, to, config, delete_on_success, print_file_id, force_file, forw
     if large_files == 'fail':
         # Validate now
         files = list(files)
-    if to.lstrip("-+").isdigit():
+    if isinstance(to, str) and to.lstrip("-+").isdigit():
         to = int(to)
     if sort and natsorted:
         files = natsorted(files, key=lambda x: x.name)
@@ -214,7 +214,7 @@ def download(from_, config, delete_on_success, proxy, split_files, interactive):
     client.start()
     if not interactive and not from_:
         from_ = 'me'
-    elif not interactive and from_.lstrip("-+").isdigit():
+    elif isinstance(from_, str)  and from_.lstrip("-+").isdigit():
         from_ = int(from_)
     elif interactive and not from_:
         click.echo('Select the dialog of the files to download:')
