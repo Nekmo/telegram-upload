@@ -2,6 +2,11 @@
 History
 =======
 
+0.6.1 (2023-06-17)
+------------------
+
+* Issue #197: if to.lstrip("-+").isdigit(): AttributeError: 'int' object has no attribute 'lstrip'
+
 0.6.0 (2023-06-15)
 ------------------
 
