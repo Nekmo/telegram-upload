@@ -104,14 +104,18 @@ class Client(TelegramClient):
 
     def start(
             self,
-            phone=lambda: click.prompt('Please enter your phone', type=phone_match),
-            password=lambda: getpass.getpass('Please enter your password: '),
+            bot_token=None,
+            phone=None,
+            password=None,
             *,
-            bot_token=None, force_sms=False, code_callback=None,
+            force_sms=False, code_callback=None,
             first_name='New User', last_name='', max_attempts=3):
+        with open(self.config_file) as f:
+            config = json.load(f)
         try:
-            return super().start(phone=phone, password=password, bot_token=bot_token, force_sms=force_sms,
-                                 first_name=first_name, last_name=last_name, max_attempts=max_attempts)
+            return super().start(phone=config.get('phone', None), password=config.get('password', None),
+                                 bot_token=config.get('bot_token', None), force_sms=force_sms, first_name=first_name,
+                                 last_name=last_name, max_attempts=max_attempts)
         except ApiIdInvalidError:
             raise InvalidApiFileError(self.config_file)
 
