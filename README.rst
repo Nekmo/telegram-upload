@@ -43,7 +43,7 @@ To **install 🔧 telegram-upload**, run this command in your terminal:
     $ sudo pip3 install -U telegram-upload
 
 This is the preferred method to install telegram-upload, as it will always install the most recent stable release.
-🐍 **Python 3.7-3.11** are tested and supported. There are other installation ways available like `Docker <#docker>`_.
+🐍 **Python 3.7-3.11** are tested and supported. There are other installation ways available like `Docker <#-docker>`_.
 More info in the `📕 documentation <https://docs.nekmo.org/telegram-upload/installation.html>`_
 
 .. image:: https://raw.githubusercontent.com/Nekmo/telegram-upload/master/telegram-upload-demo.gif
@@ -84,6 +84,23 @@ a **terminal 🪄 wizard**. It even **supports mouse**!
     $ telegram-download --interactive  # Interactive download
 
 More info in `the documentation <https://docs.nekmo.org/telegram-upload/usage.html#interactive-mode>`_.
+
+Set group or chat
+-----------------
+By default when using telegram-upload without specifying the recipient or sender, telegram-upload will use your personal
+chat. However you can define the 👨 destination. For file upload the argument is ``--to <entity>``. For example:
+
+.. code-block::
+
+    ~ $ telegram-upload --to telegram.me/joinchat/AAAAAEkk2WdoDrB4-Q8-gg video.mkv
+
+You can download files from a specific chat using the --from <entity> parameter. For example:
+
+.. code-block::
+
+    ~ $ telegram-download --from username
+
+You can see all the possible values for the entity in `the documentation <https://docs.nekmo.org/telegram-upload/usage.html#set-recipient-or-sender>`_.
 
 Split & join files
 ------------------
