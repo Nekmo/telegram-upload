@@ -170,4 +170,9 @@ For example::
                -it nekmo/telegram-upload:master
                upload file_to_upload.txt
 
+❤️ Thanks
+=========
+This project developed by `Nekmo <https://github.com/Nekmo>`_ & `collaborators <https://github.com/Nekmo/telegram-upload/graphs/contributors>`_ would not be possible without
+`Telethon <https://github.com/LonamiWebs/Telethon>`_, the library used as a Telegram client.
 
+Telegram-upload is licensed under the `MIT license <https://github.com/Nekmo/telegram-upload/blob/master/LICENSE>`_.
