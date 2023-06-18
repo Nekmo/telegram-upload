@@ -25,78 +25,112 @@
   :target: https://codecov.io/github/Nekmo/telegram-upload
   :alt: Test coverage
 
-.. image:: https://img.shields.io/requires/github/Nekmo/telegram-upload.svg?style=flat-square
-     :target: https://requires.io/github/Nekmo/telegram-upload/requirements/?branch=master
-     :alt: Requirements Status
+.. image:: https://img.shields.io/github/stars/Nekmo/telegram-upload?style=flat-square
+     :target: https://github.com/Nekmo/telegram-upload
+     :alt: Github stars
 
 
 ###############
 telegram-upload
 ###############
-Telegram-upload uses your personal Telegram account to upload and download files up to 2GiB (bots are limited to 50
-MiB). Turn Telegram into your personal cloud!
+Telegram-upload uses your personal Telegram account to **upload** and **download** files up to 2GiB (bots are limited to 50
+MiB). Turn Telegram into your personal ☁ cloud!
 
-To **install telegram-upload**, run this command in your terminal:
+To **install 🔧 telegram-upload**, run this command in your terminal:
 
 .. code-block:: console
 
     $ sudo pip3 install -U telegram-upload
 
 This is the preferred method to install telegram-upload, as it will always install the most recent stable release.
-`More info in the documentation <https://docs.nekmo.org/telegram-upload/installation.html>`_
+🐍 **Python 3.7-3.11** are tested and supported. There are other installation ways available like `Docker <#docker>`_.
+More info in the `📕 documentation <https://docs.nekmo.org/telegram-upload/installation.html>`_
 
+.. image:: https://raw.githubusercontent.com/Nekmo/telegram-upload/master/telegram-upload-demo.png
+  :target: https://asciinema.org/a/592098
+  :width: 100%
 
-To use this program you need an Telegram account and your *App api_id/api_hash* (get it in
-`my.telegram.org <https://my.telegram.org/>`_). The first time you use telegram-upload it requests your telephone,
-api_id and api_hash. Bot tokens can not be used with this program (bot uploads are limited to 50MB). To **send files**
-(by default it is uploaded to saved messages):
+❓ Usage
+========
+To use this program you need an Telegram account and your **App api_id & api_hash** (get it in
+`my.telegram.org <https://my.telegram.org/>`_). The first time you use telegram-upload it requests your
+📱 **telephone**, **api_id** and **api_hash**. Bot tokens can not be used with this program (bot uploads are limited to
+50MB).
+
+To **send ⬆️ files** (by default it is uploaded to saved messages):
 
 .. code-block:: console
 
-    $ telegram-upload file1.mp4 /path/to/file2.mkv
+    $ telegram-upload file1.mp4 file2.mkv
 
-Credentials are saved in ``~/.config/telegram-upload.json`` and ``~/.config/telegram-upload.session``. You must make
-sure that these files are secured. You can copy these files to authenticate ``telegram-upload`` on more machines, but
-it is advisable to create a session file for each machine. Upload options are available
-`in the documentation <https://docs.nekmo.org/telegram-upload/usage.html#telegram-upload>`_.
-
-
-You can **download the files** again from your saved messages (by default) or from a channel. All files will be
+You can **download ⤵️ the files** again from your saved messages (by default) or from a channel. All files will be
 downloaded until the last text message.
 
 .. code-block:: console
 
     $ telegram-download
 
-The ``--delete-on-success`` option allows you to delete the Telegram message after downloading the file. This is
-useful to send files to download to your saved messages and avoid downloading them again. You can use this option to
-download files on your computer away from home.
-
-`Read the documentation <https://docs.nekmo.org/telegram-upload/usage.html#telegram-download>`_ for more info.
-
+`Read the documentation <https://docs.nekmo.org/telegram-upload/usage.html#telegram-download>`_ for more info about the
+options availables.
 
 Interactive mode
-================
+----------------
 The **interactive option** (``--interactive``) allows you to choose the dialog and the files to download or upload with
-a **terminal wizard**. It even **supports mouse**!
+a **terminal 🪄 wizard**. It even **supports mouse**!
 
 .. code-block:: console
 
     $ telegram-upload --interactive    # Interactive upload
     $ telegram-download --interactive  # Interactive download
 
+More info in `the documentation <https://docs.nekmo.org/telegram-upload/usage.html#interactive-mode>`_.
 
-Features
-========
+Split & join files
+------------------
+If you try to upload a file that **exceeds the maximum supported** by Telegram by default, an error will occur. But you
+can enable ✂ **split mode** to upload multiple files:
 
-* Upload multiples files (up to 2GiB per file)
-* Download files.
-* Add video thumbs.
-* Delete local or remote file on success.
-* ... And more.
+.. code-block:: console
 
-Docker
-======
+    $ telegram-upload --large-files split large-video.mkv
+
+Files split using split can be rejoined on download using:
+
+.. code-block:: console
+
+    $ telegram-download --split-files join
+
+Find more help in `the documentation <https://docs.nekmo.org/telegram-upload/usage.html#split-files>`_.
+
+Delete on success
+-----------------
+The ``--delete-on-success`` option allows you to ❌ **delete the Telegram message** after downloading the file. This is
+useful to send files to download to your saved messages and avoid downloading them again. You can use this option to
+download files on your computer away from home.
+
+Configuration
+-------------
+Credentials are saved in ``~/.config/telegram-upload.json`` and ``~/.config/telegram-upload.session``. You must make
+sure that these files are secured. You can copy these 📁 files to authenticate ``telegram-upload`` on more machines, but
+it is advisable to create a session file for each machine.
+
+More options
+------------
+Telegram-upload has more options available, like customizing the files thumbnail or configuring a proxy.
+`Read the documentation <https://docs.nekmo.org/telegram-upload/usage.html#telegram-download>`_ for more info.
+
+💡 Features
+===========
+
+* **Upload** and **download** multiples files (up to 2GiB per file).
+* **Interactive** mode.
+* Add video **thumbs**.
+* **Split** and **join** large files.
+* **Delete** local or remote file on success.
+* ... And **more**.
+
+🐋 Docker
+=========
 Run telegram-upload without installing it on your system using Docker. Instead of ``telegram-upload``
 and ``telegram-download`` you should use ``upload`` and ``download``. Usage::
 
