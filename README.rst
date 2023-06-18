@@ -46,7 +46,7 @@ This is the preferred method to install telegram-upload, as it will always insta
 🐍 **Python 3.7-3.11** are tested and supported. There are other installation ways available like `Docker <#docker>`_.
 More info in the `📕 documentation <https://docs.nekmo.org/telegram-upload/installation.html>`_
 
-.. image:: https://raw.githubusercontent.com/Nekmo/telegram-upload/master/telegram-upload-demo.png
+.. image:: https://raw.githubusercontent.com/Nekmo/telegram-upload/master/telegram-upload-demo.gif
   :target: https://asciinema.org/a/592098
   :width: 100%
 
