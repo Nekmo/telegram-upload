@@ -7,7 +7,7 @@ import click
 from telethon.tl.types import User
 
 from telegram_upload.cli import show_checkboxlist, show_radiolist
-from telegram_upload.client import Client, get_message_file_attribute
+from telegram_upload.client import TelegramManagerClient, get_message_file_attribute
 from telegram_upload.config import default_config, CONFIG_FILE
 from telegram_upload.download_files import KeepDownloadSplitFiles, JoinDownloadSplitFiles
 from telegram_upload.exceptions import catch
@@ -148,7 +148,7 @@ def upload(files, to, config, delete_on_success, print_file_id, force_file, forw
     The maximum file size is 2 GiB and by default they will be saved in
     your saved messages.
     """
-    client = Client(config or default_config(), proxy=proxy)
+    client = TelegramManagerClient(config or default_config(), proxy=proxy)
     client.start()
     if interactive and not files:
         click.echo('Select the local files to upload:')
@@ -210,7 +210,7 @@ def download(from_, config, delete_on_success, proxy, split_files, interactive):
     "saved messages" and use parameter ``--delete-on-success``. Forwarded messages will
     be removed from the chat after downloading, such as a download queue.
     """
-    client = Client(config or default_config(), proxy=proxy)
+    client = TelegramManagerClient(config or default_config(), proxy=proxy)
     client.start()
     if not interactive and not from_:
         from_ = 'me'
