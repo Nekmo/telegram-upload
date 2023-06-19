@@ -96,7 +96,7 @@ class TelegramDownloadClient(TelegramClient):
         try:
             # The speed of this code can be improved. 10 requests are made in parallel, but it waits for all 10 to
             # finish before launching another 10.
-            for tasks in grouper(self._iter_download_chunk(input_location, part_size, dc_id, msg_data, file_size),
+            for tasks in grouper(self._iter_download_chunk_tasks(input_location, part_size, dc_id, msg_data, file_size),
                                  PARALLEL_DOWNLOAD_BLOCKS):
                 tasks = list(filter(bool, tasks))
                 await asyncio.wait(tasks)
@@ -124,7 +124,7 @@ class TelegramDownloadClient(TelegramClient):
             if isinstance(file, str) or in_memory:
                 f.close()
 
-    def _iter_download_chunk(self, input_location, part_size, dc_id, msg_data, file_size):
+    def _iter_download_chunk_tasks(self, input_location, part_size, dc_id, msg_data, file_size):
         for i in range(0, file_size, part_size):
             yield self.loop.create_task(
                 anext(self._iter_download(input_location, offset=i, request_size=part_size, dc_id=dc_id,
