@@ -1,11 +1,23 @@
+import asyncio
+import inspect
+import io
+import pathlib
 from typing import Iterable
 
-from telethon import TelegramClient
+import typing
+
+from more_itertools import grouper
+from telethon import TelegramClient, utils, helpers
+from telethon.client.downloads import MIN_CHUNK_SIZE
+from telethon.crypto import AES
 
 from telegram_upload.client.progress_bar import get_progress_bar
 from telegram_upload.download_files import DownloadFile
 from telegram_upload.exceptions import TelegramUploadNoSpaceError
 from telegram_upload.utils import free_disk_usage, sizeof_fmt
+
+
+PARALLEL_DOWNLOAD_BLOCKS = 10
 
 
 class TelegramDownloadClient(TelegramClient):
@@ -44,3 +56,77 @@ class TelegramDownloadClient(TelegramClient):
     def forward_to(self, message, destinations):
         for destination in destinations:
             self.forward_messages(destination, [message])
+
+    async def _download_file(
+            self: 'TelegramClient',
+            input_location: 'hints.FileLike',
+            file: 'hints.OutFileLike' = None,
+            *,
+            part_size_kb: float = None,
+            file_size: int = None,
+            progress_callback: 'hints.ProgressCallback' = None,
+            dc_id: int = None,
+            key: bytes = None,
+            iv: bytes = None,
+            msg_data: tuple = None) -> typing.Optional[bytes]:
+        if not part_size_kb:
+            if not file_size:
+                part_size_kb = 64  # Reasonable default
+            else:
+                part_size_kb = utils.get_appropriated_part_size(file_size)
+
+        part_size = int(part_size_kb * 1024)
+        if part_size % MIN_CHUNK_SIZE != 0:
+            raise ValueError(
+                'The part size must be evenly divisible by 4096.')
+
+        if isinstance(file, pathlib.Path):
+            file = str(file.absolute())
+
+        in_memory = file is None or file is bytes
+        if in_memory:
+            f = io.BytesIO()
+        elif isinstance(file, str):
+            # Ensure that we'll be able to download the media
+            helpers.ensure_parent_dir_exists(file)
+            f = open(file, 'wb')
+        else:
+            f = file
+
+        try:
+            # The speed of this code can be improved. 10 requests are made in parallel, but it waits for all 10 to
+            # finish before launching another 10.
+            for tasks in grouper(self._iter_download_chunk(input_location, part_size, dc_id, msg_data, file_size),
+                                 PARALLEL_DOWNLOAD_BLOCKS):
+                tasks = list(filter(bool, tasks))
+                await asyncio.wait(tasks)
+                chunk = b''.join(filter(bool, [task.result() for task in tasks]))
+                if not chunk:
+                    break
+                if iv and key:
+                    chunk = AES.decrypt_ige(chunk, key, iv)
+                r = f.write(chunk)
+                if inspect.isawaitable(r):
+                    await r
+
+                if progress_callback:
+                    r = progress_callback(f.tell(), file_size)
+                    if inspect.isawaitable(r):
+                        await r
+
+            # Not all IO objects have flush (see #1227)
+            if callable(getattr(f, 'flush', None)):
+                f.flush()
+
+            if in_memory:
+                return f.getvalue()
+        finally:
+            if isinstance(file, str) or in_memory:
+                f.close()
+
+    def _iter_download_chunk(self, input_location, part_size, dc_id, msg_data, file_size):
+        for i in range(0, file_size, part_size):
+            yield self.loop.create_task(
+                anext(self._iter_download(input_location, offset=i, request_size=part_size, dc_id=dc_id,
+                                          msg_data=msg_data))
+            )
