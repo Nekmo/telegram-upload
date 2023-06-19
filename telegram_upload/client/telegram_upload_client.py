@@ -5,8 +5,8 @@ import time
 from typing import Iterable, Optional
 
 import click
-from pyaes import AES
 from telethon import TelegramClient, utils, helpers, custom
+from telethon.crypto import AES
 from telethon.errors import RPCError, FloodWaitError
 from telethon.tl import types, functions, TLRequest
 from telethon.utils import pack_bot_file_id

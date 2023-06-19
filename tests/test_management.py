@@ -12,7 +12,7 @@ directory = os.path.dirname(os.path.abspath(__file__))
 class TestUpload(unittest.TestCase):
 
     @patch('telegram_upload.management.default_config')
-    @patch('telegram_upload.management.Client')
+    @patch('telegram_upload.management.TelegramManagerClient')
     def test_upload(self, m1, m2):
         test_file = os.path.join(directory, 'test_management.py')
         runner = CliRunner()
@@ -22,7 +22,7 @@ class TestUpload(unittest.TestCase):
         m1.return_value.send_files.assert_called_once()
 
     @patch('telegram_upload.management.default_config')
-    @patch('telegram_upload.management.Client')
+    @patch('telegram_upload.management.TelegramManagerClient')
     def test_exclusive(self, m1, m2):
         runner = CliRunner()
         result = runner.invoke(upload, ['missing_file.txt', '--thumbnail-file', 'cara128.png', '--no-thumbnail'])
@@ -32,7 +32,7 @@ class TestUpload(unittest.TestCase):
 
 class TestDownload(unittest.TestCase):
     @patch('telegram_upload.management.default_config')
-    @patch('telegram_upload.management.Client')
+    @patch('telegram_upload.management.TelegramManagerClient')
     def test_download(self, m1, m2):
         runner = CliRunner()
         result = runner.invoke(download, [])
