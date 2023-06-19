@@ -299,8 +299,10 @@ class TelegramUploadClient(TelegramClient):
                     request = functions.upload.SaveFilePartRequest(
                         file_id, part_index, part)
                 await semaphore.acquire()
-                self.loop.create_task(self._send_file_part(request, part_index, part_count, pos, file_size,
-                                                           semaphore, progress_callback))
+                task = self.loop.create_task(self._send_file_part(request, part_index, part_count, pos, file_size,
+                                                                  semaphore, progress_callback))
+            # HACK: Wait for the last task. It may be neccesary to wait for ALL tasks or find another better solution.
+            await asyncio.wait([task])
 
         if is_big:
             return types.InputFileBig(file_id, part_count, file_name)
