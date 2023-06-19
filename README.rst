@@ -83,7 +83,7 @@ a **terminal 🪄 wizard**. It even **supports mouse**!
     $ telegram-upload --interactive    # Interactive upload
     $ telegram-download --interactive  # Interactive download
 
-More info in `the documentation <https://docs.nekmo.org/telegram-upload/usage.html#interactive-mode>`_.
+`More info in the documentation <https://docs.nekmo.org/telegram-upload/usage.html#interactive-mode>`_
 
 Set group or chat
 -----------------
@@ -100,7 +100,7 @@ You can download files from a specific chat using the --from <entity> parameter.
 
     ~ $ telegram-download --from username
 
-You can see all the possible values for the entity in `the documentation <https://docs.nekmo.org/telegram-upload/usage.html#set-recipient-or-sender>`_.
+You can see all `the possible values for the entity in the documentation <https://docs.nekmo.org/telegram-upload/usage.html#set-recipient-or-sender>`_.
 
 Split & join files
 ------------------
@@ -117,7 +117,7 @@ Files split using split can be rejoined on download using:
 
     $ telegram-download --split-files join
 
-Find more help in `the documentation <https://docs.nekmo.org/telegram-upload/usage.html#split-files>`_.
+Find more help in `the telegram-upload documentation <https://docs.nekmo.org/telegram-upload/usage.html#split-files>`_.
 
 Delete on success
 -----------------
