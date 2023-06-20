@@ -105,8 +105,3 @@ class TestTelegramUploadClient(unittest.IsolatedAsyncioTestCase):
                    side_effect=lambda obj, target: isinstance_result.get(target, isinstance(obj, target))), \
                 self.subTest("Test Document"):
             await self.client._send_media(entity, file, mock_progress)
-        # self.client.send_file.assert_called_once_with(
-        #     entity, file, thumb=None, file_size=file.file_size,
-        #     caption=os.path.basename(self.upload_file_path).split('.')[0], force_document=False,
-        #     progress_callback=AnyArg(), attributes=[],
-        # )

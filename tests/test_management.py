@@ -1,12 +1,30 @@
 import os
 import unittest
+from unittest.mock import MagicMock
+
+from telethon.tl.types import DocumentAttributeFilename, User
+
 from ._compat import patch
 
 from click.testing import CliRunner
 
-from telegram_upload.management import upload, download
+from telegram_upload.management import upload, download, get_file_display_name
 
 directory = os.path.dirname(os.path.abspath(__file__))
+
+
+class TestGetFileDisplayName(unittest.TestCase):
+    def test_get_file_display_name(self):
+        mock_message = MagicMock()
+        mock_message.document.mime_type = "text/plain"
+        mock_message.document.attributes = [DocumentAttributeFilename("test.txt")]
+        mock_message.text = "text"
+        mock_message.sender = User(
+            1000, first_name="first_name", last_name="last_name", username="username",
+        )
+        mock_message.date = "date"
+        display_name = get_file_display_name(mock_message)
+        self.assertEqual('text test.txt [text] by first_name last_name @username date', display_name)
 
 
 class TestUpload(unittest.TestCase):
