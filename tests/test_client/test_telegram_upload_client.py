@@ -2,7 +2,9 @@ import json
 import os
 import sys
 import unittest
-from unittest.mock import patch, mock_open, Mock, MagicMock, call
+from unittest.mock import patch, mock_open, Mock, MagicMock, call, AsyncMock
+
+from telethon import types
 
 from telegram_upload.client.telegram_upload_client import TelegramUploadClient
 from telegram_upload.exceptions import TelegramUploadDataLoss, MissingFileError
@@ -19,7 +21,7 @@ class AnyArg(object):
         return True
 
 
-class TestTelegramUploadClient(unittest.TestCase):
+class TestTelegramUploadClient(unittest.IsolatedAsyncioTestCase):
     @patch('builtins.open', mock_open(read_data=json.dumps(CONFIG_DATA)))
     @patch('telegram_upload.client.telegram_upload_client.TelegramClient.__init__', return_value=None)
     def setUp(self, m1) -> None:
@@ -37,6 +39,20 @@ class TestTelegramUploadClient(unittest.TestCase):
             call(mock_destinations[0], [mock_message]),
             call(mock_destinations[1], [mock_message]),
         ])
+
+    async def test_send_album_media(self):
+        self.client.get_input_entity = AsyncMock()
+        self.client._call = AsyncMock()
+        self.client._sender = MagicMock()
+        self.client._get_response_message = MagicMock()
+        entity = "entity"
+        mock_media = [MagicMock(), MagicMock()]
+        response_message = await self.client._send_album_media(entity, mock_media)
+        self.assertEqual(self.client._get_response_message.return_value, response_message)
+        self.client._get_response_message.assert_called_once_with(
+            [m.random_id for m in mock_media], self.client._call.return_value,
+            self.client.get_input_entity.return_value,
+        )
 
     @patch('telegram_upload.client.telegram_upload_client.TelegramUploadClient.send_files')
     @patch('telegram_upload.client.telegram_upload_client.TelegramUploadClient._send_album_media')
@@ -70,3 +86,27 @@ class TestTelegramUploadClient(unittest.TestCase):
         self.client.send_file.return_value.media.document.size = 200
         with self.assertRaises(TelegramUploadDataLoss):
             self.client.send_files('foo', [file])
+
+    @patch('telegram_upload.client.telegram_upload_client.utils')
+    async def test_send_media(self, mock_utils: MagicMock):
+        mock_utils.get_appropriated_part_size.return_value = 512
+        self.client.get_input_entity = AsyncMock()
+        self.client._log = AsyncMock()
+        self.client._call = AsyncMock()
+        self.client._sender = MagicMock()
+        entity = 'entity'
+        mock_progress = MagicMock()
+        file = File(self.upload_file_path)
+        with patch('telegram_upload.client.telegram_upload_client.isinstance', return_value=True), \
+                self.subTest("Test photo"):
+            await self.client._send_media(entity, file, mock_progress)
+        isinstance_result = {types.InputMediaUploadedPhoto: False, types.InputMediaUploadedDocument: True}
+        with patch('telegram_upload.client.telegram_upload_client.isinstance',
+                   side_effect=lambda obj, target: isinstance_result.get(target, isinstance(obj, target))), \
+                self.subTest("Test Document"):
+            await self.client._send_media(entity, file, mock_progress)
+        # self.client.send_file.assert_called_once_with(
+        #     entity, file, thumb=None, file_size=file.file_size,
+        #     caption=os.path.basename(self.upload_file_path).split('.')[0], force_document=False,
+        #     progress_callback=AnyArg(), attributes=[],
+        # )
