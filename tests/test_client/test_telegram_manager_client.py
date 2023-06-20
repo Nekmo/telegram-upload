@@ -1,10 +1,17 @@
+import json
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock, mock_open
 
 import socks
+from telethon.network import ConnectionTcpMTProxyRandomizedIntermediate
 
+from telegram_upload.client import TelegramManagerClient
 from telegram_upload.client.telegram_manager_client import phone_match, parse_proxy_string
+from telegram_upload.config import SESSION_FILE
 from telegram_upload.exceptions import TelegramProxyError
+
+
+CONFIG_DATA = {'api_hash': '', 'api_id': ''}
 
 
 class TestPhoneMatch(unittest.TestCase):
@@ -46,4 +53,34 @@ class TestParseProxyString(unittest.TestCase):
 
 
 class TestTelegramManagerClient(unittest.TestCase):
-    pass
+    @patch('builtins.open', mock_open(read_data=json.dumps(CONFIG_DATA)))
+    @patch('telegram_upload.client.telegram_manager_client.TelegramUploadClient.__init__')
+    def test_init(self, mock_init: MagicMock):
+        config_file = "config_file"
+        proxy = "mtproxy://secret@proxy.my.site:443"
+        TelegramManagerClient(config_file, proxy=proxy)
+        mock_init.assert_called_once_with(
+            SESSION_FILE, CONFIG_DATA["api_id"], CONFIG_DATA["api_hash"], proxy=("proxy.my.site", 443, "secret"),
+            connection=ConnectionTcpMTProxyRandomizedIntermediate
+        )
+
+    @patch('builtins.open', mock_open(read_data=json.dumps(CONFIG_DATA)))
+    @patch('telegram_upload.client.telegram_manager_client.TelegramUploadClient.__init__')
+    @patch('telegram_upload.client.telegram_manager_client.TelegramUploadClient.start')
+    def test_start(self, mock_start: MagicMock, _: MagicMock):
+        config_file = "config_file"
+        phone = "phone"
+        password = "password"
+        bot_token = "bot_token"
+        force_sms = True
+        first_name = "first_name"
+        last_name = "last_name"
+        max_attempts = 3
+        TelegramManagerClient(config_file).start(
+            phone, password, bot_token=bot_token, force_sms=force_sms, first_name=first_name, last_name=last_name,
+            max_attempts=max_attempts
+        )
+        mock_start.assert_called_once_with(
+            phone=phone, password=password, bot_token=bot_token, force_sms=force_sms, first_name=first_name,
+            last_name=last_name, max_attempts=max_attempts,
+        )

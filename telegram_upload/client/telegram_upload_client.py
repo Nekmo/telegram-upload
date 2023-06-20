@@ -22,6 +22,10 @@ RETRIES = 3
 
 
 class TelegramUploadClient(TelegramClient):
+    def forward_to(self, message, destinations):
+        for destination in destinations:
+            self.forward_messages(destination, [message])
+
     async def _send_album_media(self, entity, media):
         entity = await self.get_input_entity(entity)
         request = functions.messages.SendMultiMediaRequest(

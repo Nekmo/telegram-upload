@@ -1,9 +1,9 @@
 import json
 import os
 import unittest
-from unittest.mock import patch, mock_open, Mock
+from unittest.mock import patch, mock_open, Mock, MagicMock, call
 
-from telegram_upload.client.telegram_manager_client import TelegramManagerClient
+from telegram_upload.client.telegram_upload_client import TelegramUploadClient
 from telegram_upload.exceptions import TelegramUploadDataLoss, MissingFileError
 from telegram_upload.upload_files import File
 
@@ -18,14 +18,24 @@ class AnyArg(object):
         return True
 
 
-class TestTelegramManagerClient(unittest.TestCase):
+class TestTelegramUploadClient(unittest.TestCase):
     @patch('builtins.open', mock_open(read_data=json.dumps(CONFIG_DATA)))
-    @patch('telegram_upload.client.telegram_manager_client.TelegramUploadClient.__init__')
+    @patch('telegram_upload.client.telegram_upload_client.TelegramClient.__init__', return_value=None)
     def setUp(self, m1) -> None:
         self.upload_file_path = os.path.abspath(os.path.join(directory, 'logo.png'))
-        self.client = TelegramManagerClient('foo.json')
+        self.client = TelegramUploadClient(Mock(), Mock(), Mock())
         self.client.send_file = Mock()
         self.client.send_file.return_value.media.document.size = os.path.getsize(self.upload_file_path)
+
+    @patch("telegram_upload.client.telegram_upload_client.TelegramUploadClient.forward_messages")
+    def test_forward_to(self, mock_forward_messages: MagicMock):
+        mock_message = MagicMock()
+        mock_destinations = [MagicMock(), MagicMock()]
+        self.client.forward_to(mock_message, mock_destinations)
+        mock_forward_messages.assert_has_calls([
+            call(mock_destinations[0], [mock_message]),
+            call(mock_destinations[1], [mock_message]),
+        ])
 
     @patch('telegram_upload.management.default_config')
     def test_missing_file(self, m1):

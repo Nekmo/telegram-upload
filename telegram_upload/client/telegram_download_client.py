@@ -53,10 +53,6 @@ class TelegramDownloadClient(TelegramClient):
             if delete_on_success:
                 self.delete_messages(entity, [download_file.message])
 
-    def forward_to(self, message, destinations):
-        for destination in destinations:
-            self.forward_messages(destination, [message])
-
     async def _download_file(
             self: 'TelegramClient',
             input_location: 'hints.FileLike',
