@@ -57,3 +57,14 @@ class TestTelegramUploadClient(unittest.TestCase):
         self.client.send_file.return_value.media.document.size = 200
         with self.assertRaises(TelegramUploadDataLoss):
             self.client.send_files('foo', [file])
+
+    @patch('telegram_upload.client.telegram_upload_client.TelegramUploadClient.send_files')
+    @patch('telegram_upload.client.telegram_upload_client.TelegramUploadClient._send_album_media')
+    def test_send_files_as_album(self, mock_send_album_media: MagicMock, mock_send_files: MagicMock):
+        entity = "entity"
+        mock_files = [MagicMock(), MagicMock()]
+        self.client.send_files_as_album(entity, mock_files)
+        mock_send_files.assert_called_once_with(
+            entity, tuple(mock_files), False, False, (), send_as_media=True
+        )
+        mock_send_album_media.assert_called_once_with(entity, mock_send_files.return_value)
