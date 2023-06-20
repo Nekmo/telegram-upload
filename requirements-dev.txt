@@ -5,3 +5,5 @@ tox>=1.8
 codecov
 pysocks
 mock; python_version < '3.6'
+asyncmock; python_version < '3.8'
+async-case; python_version < '3.8'

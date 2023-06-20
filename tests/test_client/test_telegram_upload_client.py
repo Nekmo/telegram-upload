@@ -2,13 +2,22 @@ import json
 import os
 import sys
 import unittest
-from unittest.mock import patch, mock_open, Mock, MagicMock, call, AsyncMock
+
+from unittest.mock import patch, mock_open, Mock, MagicMock, call
 
 from telethon import types
 
 from telegram_upload.client.telegram_upload_client import TelegramUploadClient
 from telegram_upload.exceptions import TelegramUploadDataLoss, MissingFileError
 from telegram_upload.upload_files import File
+
+
+try:
+    from unittest.mock import AsyncMock
+    from unittest import IsolatedAsyncioTestCase
+except ImportError:
+    from asyncmock import AsyncMock
+    from async_case import IsolatedAsyncioTestCase
 
 CONFIG_DATA = {'api_hash': '', 'api_id': ''}
 
@@ -21,7 +30,7 @@ class AnyArg(object):
         return True
 
 
-class TestTelegramUploadClient(unittest.IsolatedAsyncioTestCase):
+class TestTelegramUploadClient(IsolatedAsyncioTestCase):
     @patch('builtins.open', mock_open(read_data=json.dumps(CONFIG_DATA)))
     @patch('telegram_upload.client.telegram_upload_client.TelegramClient.__init__', return_value=None)
     def setUp(self, m1) -> None:
@@ -88,6 +97,7 @@ class TestTelegramUploadClient(unittest.IsolatedAsyncioTestCase):
             self.client.send_files('foo', [file])
 
     @patch('telegram_upload.client.telegram_upload_client.utils')
+    @unittest.skipIf(sys.version_info < (3, 8), "TypeError: Cannot cast AsyncMock to any kind of InputMedia.")
     async def test_send_media(self, mock_utils: MagicMock):
         mock_utils.get_appropriated_part_size.return_value = 512
         self.client.get_input_entity = AsyncMock()
