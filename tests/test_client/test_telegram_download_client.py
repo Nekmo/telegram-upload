@@ -46,6 +46,7 @@ class TestTelegramDownloadClient(unittest.TestCase):
 
     @patch("telegram_upload.client.telegram_download_client.TelegramDownloadClient._iter_download_chunk_tasks")
     @patch("telegram_upload.client.telegram_download_client.asyncio.wait")
+    @unittest.skipIf(sys.version_info < (3, 8), "object MagicMock can't be used in 'await' expression")
     def test_download_file(self, mock_wait: MagicMock, mock_iter_download_chunk_tasks: MagicMock):
         mock_iter_download_chunk_tasks.return_value = [
             MagicMock(**{"result.return_value": f"foo{i}".encode("utf-8")}) for i in range(2)
