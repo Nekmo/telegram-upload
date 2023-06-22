@@ -186,8 +186,8 @@ class File(FileIO):
 class SplitFile(File, FileIO):
     force_file = True
 
-    def __init__(self, file: Union[str, bytes, int], max_read_size: int, name: str):
-        super().__init__(file)
+    def __init__(self, client: 'TelegramManagerClient', file: Union[str, bytes, int], max_read_size: int, name: str):
+        super().__init__(client, file)
         self.max_read_size = max_read_size
         self.remaining_size = max_read_size
         self._name = name
@@ -230,6 +230,6 @@ class SplitFiles(LargeFilesBase):
         zfill = int(math.log10(10)) + 1
         for part in range(parts):
             size = total_size - (part * self.client.max_file_size) if part >= parts - 1 else self.client.max_file_size
-            splitted_file = SplitFile(file, size, '{}.{}'.format(file_name, str(part).zfill(zfill)))
+            splitted_file = SplitFile(self.client, file, size, '{}.{}'.format(file_name, str(part).zfill(zfill)))
             splitted_file.seek(self.client.max_file_size * part, split_seek=True)
             yield splitted_file
