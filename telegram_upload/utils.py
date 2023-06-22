@@ -1,7 +1,10 @@
 import asyncio
 import itertools
+import os
 import shutil
 from telegram_upload._compat import scandir
+from telegram_upload.exceptions import TelegramEnvironmentError
+
 
 def free_disk_usage(directory='.'):
     return shutil.disk_usage(directory)[2]
@@ -64,3 +67,11 @@ async def amap(fn, iterator):
 async def sync_to_async_iterator(iterator):
     for value in iterator:
         yield value
+
+
+def get_environment_integer(environment_name: str, default_value: int):
+    """Get an integer from an environment variable."""
+    value = os.environ.get(environment_name, default_value)
+    if isinstance(value, int) or value.isdigit():
+        return int(value)
+    raise TelegramEnvironmentError(f"Environment variable {environment_name} must be an integer")

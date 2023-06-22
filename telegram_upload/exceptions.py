@@ -58,6 +58,10 @@ class TelegramProxyError(TelegramUploadError):
     error_code = 30
 
 
+class TelegramEnvironmentError(TelegramUploadError):
+    error_code = 31
+
+
 def catch(fn):
     def wrap(*args, **kwargs):
         try:
