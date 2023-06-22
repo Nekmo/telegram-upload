@@ -3,13 +3,14 @@ import json
 import os
 import re
 from distutils.version import StrictVersion
+from functools import cached_property
 from typing import Union
 from urllib.parse import urlparse
 
 import click
 from telethon.errors import ApiIdInvalidError
 from telethon.network import ConnectionTcpMTProxyRandomizedIntermediate
-from telethon.tl.types import DocumentAttributeFilename
+from telethon.tl.types import DocumentAttributeFilename, User, InputPeerUser
 from telethon.version import __version__ as telethon_version
 
 from telegram_upload.client.telegram_download_client import TelegramDownloadClient
@@ -21,6 +22,11 @@ if StrictVersion(telethon_version) >= StrictVersion('1.0'):
     import telethon.sync  # noqa
 
 
+BOT_USER_MAX_FILE_SIZE = 52428800  # 50MB
+USER_MAX_FILE_SIZE = 2097152000  # 2GB
+PREMIUM_USER_MAX_FILE_SIZE = 4194304000  # 4GB
+USER_MAX_CAPTION_LENGTH = 1024
+PREMIUM_USER_MAX_CAPTION_LENGTH = 2048
 PROXY_ENVIRONMENT_VARIABLE_NAMES = [
     'TELEGRAM_UPLOAD_PROXY',
     'HTTPS_PROXY',
@@ -95,3 +101,23 @@ class TelegramManagerClient(TelegramUploadClient, TelegramDownloadClient):
                                  first_name=first_name, last_name=last_name, max_attempts=max_attempts)
         except ApiIdInvalidError:
             raise InvalidApiFileError(self.config_file)
+
+    @cached_property
+    def me(self) -> Union[User, InputPeerUser]:
+        return self.get_me()
+
+    @property
+    def max_file_size(self):
+        if hasattr(self.me, 'premium') and self.me.premium:
+            return PREMIUM_USER_MAX_FILE_SIZE
+        elif self.me.bot:
+            return BOT_USER_MAX_FILE_SIZE
+        else:
+            return USER_MAX_FILE_SIZE
+
+    @property
+    def max_caption_length(self):
+        if hasattr(self.me, 'premium') and self.me.premium:
+            return PREMIUM_USER_MAX_CAPTION_LENGTH
+        else:
+            return USER_MAX_CAPTION_LENGTH

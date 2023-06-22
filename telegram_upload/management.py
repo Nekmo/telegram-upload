@@ -164,7 +164,7 @@ def upload(files, to, config, delete_on_success, print_file_id, force_file, forw
     elif to is None:
         to = 'me'
     files = filter(lambda file: is_valid_file(file, lambda message: click.echo(message, err=True)), files)
-    files = DIRECTORY_MODES[directories](files)
+    files = DIRECTORY_MODES[directories](client, files)
     if directories == 'fail':
         # Validate now
         files = list(files)
@@ -175,7 +175,7 @@ def upload(files, to, config, delete_on_success, print_file_id, force_file, forw
     else:
         thumbnail = None
     files_cls = LARGE_FILE_MODES[large_files]
-    files = files_cls(files, caption=caption, thumbnail=thumbnail, force_file=force_file)
+    files = files_cls(client, files, caption=caption, thumbnail=thumbnail, force_file=force_file)
     if large_files == 'fail':
         # Validate now
         files = list(files)
