@@ -21,6 +21,7 @@ ALBUM_FILES = 10
 RETRIES = 3
 MAX_RECONNECT_RETRIES = get_environment_integer('TELEGRAM_UPLOAD_MAX_RECONNECT_RETRIES', 5)
 RECONNECT_TIMEOUT = get_environment_integer('TELEGRAM_UPLOAD_RECONNECT_TIMEOUT', 5)
+MIN_RECONNECT_WAIT = get_environment_integer('TELEGRAM_UPLOAD_MIN_RECONNECT_WAIT', 2)
 
 
 class TelegramUploadClient(TelegramClient):
@@ -356,7 +357,7 @@ class TelegramUploadClient(TelegramClient):
             self.upload_semaphore.release()
         if result is None and retry < MAX_RECONNECT_RETRIES:
             # An error occurred, retry
-            await asyncio.sleep(max(2, retry * 2))
+            await asyncio.sleep(max(MIN_RECONNECT_WAIT, retry * MIN_RECONNECT_WAIT))
             await self.reconnect()
             await self._send_file_part(
                 request, part_index, part_count, pos, file_size, progress_callback, retry + 1

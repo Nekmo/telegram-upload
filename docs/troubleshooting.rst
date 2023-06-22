@@ -31,6 +31,28 @@ If you are sure that Telegram-upload is not running, search for the process that
 As a last resort, you can restart your machine.
 
 
+I am getting 429 errors during upload
+-------------------------------------
+Since version v0.7.0 Telegram-upload uploads several parts of the file in parallel. Become of this, the Telegram API
+can become overloaded and return 429 errors. This is normal and you don't have to worry. If you are getting too many of
+these errors, you can try to reduce the number of parallel uploads using the ``PARALLEL_UPLOAD_BLOCKS`` environment
+variable. For example::
+
+    $ PARALLEL_UPLOAD_BLOCKS=2 telegram-upload video.mkv
+
+Or exporting the variable::
+
+    $ export PARALLEL_UPLOAD_BLOCKS=2
+    $ telegram-upload video.mkv
+
+The **default value is 4**. Values above this value can increase the number of 429 errors. Telegram-upload in case of
+an error will try to reconnect to the API before ``TELEGRAM_UPLOAD_MIN_RECONNECT_WAIT`` seconds. The default value is 2.
+This value will be increased with each retry. Each retry will decrease the number of ``PARALLEL_UPLOAD_BLOCKS``. The
+minimum of ``PARALLEL_UPLOAD_BLOCKS`` is one. Telegram-upload will retry connecting up to
+``TELEGRAM_UPLOAD_MAX_RECONNECT_RETRIES`` times. The default value is 5. Each retry has a maximum wait time of
+``TELEGRAM_UPLOAD_RECONNECT_TIMEOUT`` seconds before failing. All of these variables can be defined using environment
+variables.
+
 Telegram-upload does not work! An error occurs when executing it
 -----------------------------------------------------------------
 Telegram-upload is not tested with all versions of all dependencies it uses. If you have installed Telegram-upload
