@@ -31,13 +31,15 @@ class TestUpload(unittest.TestCase):
 
     @patch('telegram_upload.management.default_config')
     @patch('telegram_upload.management.TelegramManagerClient')
-    def test_upload(self, m1, m2):
+    def test_upload(self, mock_client: MagicMock, _: MagicMock):
+        mock_client.return_value.max_caption_length = 200
+        mock_client.return_value.max_file_size = 1024 * 1024 * 1024
         test_file = os.path.join(directory, 'test_management.py')
         runner = CliRunner()
         result = runner.invoke(upload, [test_file])
         self.assertEqual(result.exit_code, 0)
-        m1.assert_called_once()
-        m1.return_value.send_files.assert_called_once()
+        mock_client.assert_called_once()
+        mock_client.return_value.send_files.assert_called_once()
 
     @patch('telegram_upload.management.default_config')
     @patch('telegram_upload.management.TelegramManagerClient')

@@ -2,9 +2,10 @@ import os
 import unittest
 from unittest.mock import patch, Mock
 
+from telegram_upload.client.telegram_manager_client import USER_MAX_FILE_SIZE
 from telegram_upload.exceptions import TelegramInvalidFile
-from telegram_upload.upload_files import get_file_attributes, RecursiveFiles, NoDirectoriesFiles, MAX_FILE_SIZE, \
-    NoLargeFiles, SplitFiles, SplitFile
+from telegram_upload.upload_files import get_file_attributes, RecursiveFiles, NoDirectoriesFiles, NoLargeFiles, \
+    SplitFiles, SplitFile
 
 
 class TestGetFileAttributes(unittest.TestCase):
@@ -56,12 +57,12 @@ class TestNoDirectoriesFiles(unittest.TestCase):
 
 
 class TestNoLargeFiles(unittest.TestCase):
-    @patch('telegram_upload.upload_files.os.path.getsize', return_value=MAX_FILE_SIZE - 1)
+    @patch('telegram_upload.upload_files.os.path.getsize', return_value=USER_MAX_FILE_SIZE - 1)
     @patch('telegram_upload.upload_files.File')
     def test_small_file(self, m1, m2):
         self.assertEqual(len(list(NoLargeFiles(['foo']))), 1)
 
-    @patch('telegram_upload.upload_files.os.path.getsize', return_value=MAX_FILE_SIZE + 1)
+    @patch('telegram_upload.upload_files.os.path.getsize', return_value=USER_MAX_FILE_SIZE + 1)
     def test_big_file(self, m):
         with self.assertRaises(TelegramInvalidFile):
             next(NoLargeFiles(['foo']))
@@ -84,16 +85,16 @@ class TestSplitFile(unittest.TestCase):
 
 
 class TestSplitFiles(unittest.TestCase):
-    @patch('telegram_upload.upload_files.os.path.getsize', return_value=MAX_FILE_SIZE - 1)
+    @patch('telegram_upload.upload_files.os.path.getsize', return_value=USER_MAX_FILE_SIZE - 1)
     @patch('telegram_upload.upload_files.File')
     def test_small_file(self, m1, m2):
         self.assertEqual(len(list(SplitFiles(['foo']))), 1)
 
-    @patch('telegram_upload.upload_files.os.path.getsize', return_value=MAX_FILE_SIZE + 1000)
+    @patch('telegram_upload.upload_files.os.path.getsize', return_value=USER_MAX_FILE_SIZE + 1000)
     @patch('telegram_upload.upload_files.SplitFile.__init__', return_value=None)
     @patch('telegram_upload.upload_files.SplitFile.seek')
     def test_big_file(self, m_getsize, m_init, m_seek):
         files = list(SplitFiles(['foo']))
         self.assertEqual(len(files), 2)
-        self.assertEqual(m_init.call_args_list[0][0], ('foo', MAX_FILE_SIZE, 'foo.00'))
+        self.assertEqual(m_init.call_args_list[0][0], ('foo', USER_MAX_FILE_SIZE, 'foo.00'))
         self.assertEqual(m_init.call_args_list[1][0], ('foo', 1000, 'foo.01'))

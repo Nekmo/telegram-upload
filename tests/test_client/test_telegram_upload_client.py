@@ -82,7 +82,8 @@ class TestTelegramUploadClient(IsolatedAsyncioTestCase):
 
     def test_send_files(self):
         entity = 'foo'
-        file = File(self.upload_file_path)
+        mock_client = MagicMock(max_caption_length=200)
+        file = File(mock_client, self.upload_file_path)
         self.client.send_files(entity, [file])
         self.client.send_file.assert_called_once_with(
             entity, file, thumb=None, file_size=file.file_size,
@@ -91,7 +92,8 @@ class TestTelegramUploadClient(IsolatedAsyncioTestCase):
         )
 
     def test_send_files_data_loss(self):
-        file = File(self.upload_file_path)
+        mock_client = MagicMock(max_caption_length=200)
+        file = File(mock_client, self.upload_file_path)
         self.client.send_file.return_value.media.document.size = 200
         with self.assertRaises(TelegramUploadDataLoss):
             self.client.send_files('foo', [file])
@@ -99,6 +101,7 @@ class TestTelegramUploadClient(IsolatedAsyncioTestCase):
     @patch('telegram_upload.client.telegram_upload_client.utils')
     @unittest.skipIf(sys.version_info < (3, 8), "TypeError: Cannot cast AsyncMock to any kind of InputMedia.")
     async def test_send_media(self, mock_utils: MagicMock):
+        mock_client = MagicMock(max_caption_length=200)
         mock_utils.get_appropriated_part_size.return_value = 512
         self.client.get_input_entity = AsyncMock()
         self.client._log = AsyncMock()
@@ -106,7 +109,7 @@ class TestTelegramUploadClient(IsolatedAsyncioTestCase):
         self.client._sender = MagicMock()
         entity = 'entity'
         mock_progress = MagicMock()
-        file = File(self.upload_file_path)
+        file = File(mock_client, self.upload_file_path)
         with patch('telegram_upload.client.telegram_upload_client.isinstance', return_value=True), \
                 self.subTest("Test photo"):
             await self.client._send_media(entity, file, mock_progress)
