@@ -1,6 +1,6 @@
 import os
 import unittest
-from unittest.mock import patch, Mock
+from unittest.mock import patch, Mock, MagicMock
 
 from telegram_upload.client.telegram_manager_client import USER_MAX_FILE_SIZE
 from telegram_upload.exceptions import TelegramInvalidFile
@@ -30,7 +30,7 @@ class TestRecursiveFiles(unittest.TestCase):
     @patch('telegram_upload.upload_files.scantree', return_value=[])
     @patch('telegram_upload.upload_files.os.path.isdir', return_value=False)
     def test_one_file(self, m1, m2):
-        self.assertEqual(list(RecursiveFiles(['foo'])), ['foo'])
+        self.assertEqual(list(RecursiveFiles(MagicMock(), ['foo'])), ['foo'])
 
     @patch('telegram_upload.upload_files.scantree')
     @patch('telegram_upload.upload_files.os.path.isdir', return_value=True)
@@ -41,39 +41,39 @@ class TestRecursiveFiles(unittest.TestCase):
         file.is_dir.return_value = False
         side_effect = [file] * 3
         m2.return_value = side_effect
-        self.assertEqual(list(RecursiveFiles(['foo'])), [x.path for x in side_effect])
+        self.assertEqual(list(RecursiveFiles(MagicMock(), ['foo'])), [x.path for x in side_effect])
 
 
 class TestNoDirectoriesFiles(unittest.TestCase):
     @patch('telegram_upload.upload_files.scantree', return_value=[])
     @patch('telegram_upload.upload_files.os.path.isdir', return_value=False)
     def test_one_file(self, m1, m2):
-        self.assertEqual(list(NoDirectoriesFiles(['foo'])), ['foo'])
+        self.assertEqual(list(NoDirectoriesFiles(MagicMock(), ['foo'])), ['foo'])
 
     @patch('telegram_upload.upload_files.os.path.isdir', return_value=True)
     def test_directory(self, m):
         with self.assertRaises(TelegramInvalidFile):
-            next(NoDirectoriesFiles(['foo']))
+            next(NoDirectoriesFiles(MagicMock(), ['foo']))
 
 
 class TestNoLargeFiles(unittest.TestCase):
     @patch('telegram_upload.upload_files.os.path.getsize', return_value=USER_MAX_FILE_SIZE - 1)
     @patch('telegram_upload.upload_files.File')
     def test_small_file(self, m1, m2):
-        self.assertEqual(len(list(NoLargeFiles(['foo']))), 1)
+        self.assertEqual(len(list(NoLargeFiles(MagicMock(max_file_size=USER_MAX_FILE_SIZE), ['foo']))), 1)
 
     @patch('telegram_upload.upload_files.os.path.getsize', return_value=USER_MAX_FILE_SIZE + 1)
     def test_big_file(self, m):
         with self.assertRaises(TelegramInvalidFile):
-            next(NoLargeFiles(['foo']))
+            next(NoLargeFiles(MagicMock(max_file_size=1024 ** 3), ['foo']))
 
 
 class TestSplitFile(unittest.TestCase):
     def test_file(self):
         this_file = os.path.abspath(__file__)
         size = os.path.getsize(this_file)
-        file0 = SplitFile(this_file, size - 100, 'test.py.00')
-        file1 = SplitFile(this_file, 100, 'test.py.01')
+        file0 = SplitFile(MagicMock(), this_file, size - 100, 'test.py.00')
+        file1 = SplitFile(MagicMock(), this_file, 100, 'test.py.01')
         file1.seek(size - 100, split_seek=True)
         with open(this_file, 'rb') as f:
             content = f.read()
@@ -88,13 +88,14 @@ class TestSplitFiles(unittest.TestCase):
     @patch('telegram_upload.upload_files.os.path.getsize', return_value=USER_MAX_FILE_SIZE - 1)
     @patch('telegram_upload.upload_files.File')
     def test_small_file(self, m1, m2):
-        self.assertEqual(len(list(SplitFiles(['foo']))), 1)
+        self.assertEqual(len(list(SplitFiles(MagicMock(max_file_size=USER_MAX_FILE_SIZE), ['foo']))), 1)
 
     @patch('telegram_upload.upload_files.os.path.getsize', return_value=USER_MAX_FILE_SIZE + 1000)
     @patch('telegram_upload.upload_files.SplitFile.__init__', return_value=None)
     @patch('telegram_upload.upload_files.SplitFile.seek')
     def test_big_file(self, m_getsize, m_init, m_seek):
-        files = list(SplitFiles(['foo']))
+        mock_client = MagicMock(max_file_size=USER_MAX_FILE_SIZE)
+        files = list(SplitFiles(mock_client, ['foo']))
         self.assertEqual(len(files), 2)
-        self.assertEqual(m_init.call_args_list[0][0], ('foo', USER_MAX_FILE_SIZE, 'foo.00'))
-        self.assertEqual(m_init.call_args_list[1][0], ('foo', 1000, 'foo.01'))
+        self.assertEqual(m_init.call_args_list[0][0], (mock_client, 'foo', USER_MAX_FILE_SIZE, 'foo.00'))
+        self.assertEqual(m_init.call_args_list[1][0], (mock_client, 'foo', 1000, 'foo.01'))
