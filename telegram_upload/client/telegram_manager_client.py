@@ -2,8 +2,8 @@ import getpass
 import json
 import os
 import re
+import sys
 from distutils.version import StrictVersion
-from functools import cached_property
 from typing import Union
 from urllib.parse import urlparse
 
@@ -20,6 +20,12 @@ from telegram_upload.exceptions import TelegramProxyError, InvalidApiFileError
 
 if StrictVersion(telethon_version) >= StrictVersion('1.0'):
     import telethon.sync  # noqa
+
+
+if sys.version_info < (3, 8):
+    cached_property = property
+else:
+    from functools import cached_property
 
 
 BOT_USER_MAX_FILE_SIZE = 52428800  # 50MB
