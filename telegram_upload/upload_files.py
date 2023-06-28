@@ -7,6 +7,7 @@ from io import FileIO, SEEK_SET
 from typing import Union, TYPE_CHECKING
 
 import click
+from hachoir.metadata.metadata import RootMetadata
 from hachoir.metadata.video import MP4Metadata
 from telethon.tl.types import DocumentAttributeVideo, DocumentAttributeFilename
 
@@ -36,6 +37,13 @@ def get_file_mime(file):
     return (mimetypes.guess_type(file)[0] or ('')).split('/')[0]
 
 
+def metadata_has(metadata: RootMetadata, key: str):
+    try:
+        return metadata.has(key)
+    except ValueError:
+        return False
+
+
 def get_file_attributes(file):
     attrs = []
     mime = get_file_mime(file)
@@ -51,9 +59,9 @@ def get_file_attributes(file):
         if metadata is not None:
             supports_streaming = isinstance(video_meta, MP4Metadata)
             attrs.append(DocumentAttributeVideo(
-                (0, metadata.get('duration').seconds)[metadata.has('duration')],
-                (0, video_meta.get('width'))[video_meta.has('width')],
-                (0, video_meta.get('height'))[video_meta.has('height')],
+                (0, metadata.get('duration').seconds)[metadata_has(metadata, 'duration')],
+                (0, video_meta.get('width'))[metadata_has(video_meta, 'width')],
+                (0, video_meta.get('height'))[metadata_has(video_meta, 'height')],
                 False,
                 supports_streaming,
             ))
