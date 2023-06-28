@@ -124,7 +124,7 @@ class TelegramUploadClient(TelegramClient):
             has_files = True
             thumb = file.get_thumbnail()
             try:
-                message = self.send_one_file(entity, file, send_as_media)
+                message = self.send_one_file(entity, file, send_as_media, thumb=thumb)
             finally:
                 if thumb and not file.is_custom_thumbnail and os.path.lexists(thumb):
                     os.remove(thumb)

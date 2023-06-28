@@ -6,6 +6,7 @@ import unittest
 from unittest.mock import patch, mock_open, Mock, MagicMock, call
 
 from telethon import types
+from telethon.errors import FloodWaitError, RPCError
 
 from telegram_upload.client.telegram_upload_client import TelegramUploadClient
 from telegram_upload.exceptions import TelegramUploadDataLoss, MissingFileError
@@ -80,16 +81,66 @@ class TestTelegramUploadClient(IsolatedAsyncioTestCase):
         with self.assertRaises(MissingFileError):
             self.client.send_files('foo', [])
 
+    def test_one_file(self):
+        with self.subTest("Test send one file"):
+            entity = 'foo'
+            file = File(MagicMock(max_caption_length=200), self.upload_file_path)
+            self.client.send_one_file(entity, file, False, None)
+            self.client.send_file.assert_called_once_with(
+                entity, file, thumb=None, file_size=file.file_size, caption="logo", force_document=False,
+                progress_callback=AnyArg(), attributes=[]
+            )
+        original_send_file_message = self.client._send_file_message
+        with self.subTest("Test send one file with one flood retry"), patch('time.sleep') as mock_sleep:
+            wait = 1
+
+            self.client._send_file_message = MagicMock()
+            self.client._send_file_message.side_effect = [FloodWaitError(None, wait), original_send_file_message]
+            entity = 'foo'
+            file = File(MagicMock(), self.upload_file_path)
+            self.client.send_one_file(entity, file, False, None)
+            self.client._send_file_message.assert_has_calls([call(entity, file, None, AnyArg())] * 2)
+            mock_sleep.assert_called_once_with(wait)
+        with self.subTest("Test send one file with rpcError"):
+            self.client._send_file_message = MagicMock()
+            self.client._send_file_message.side_effect = [RPCError(None, "")] * 4
+            entity = 'foo'
+            file = File(MagicMock(), self.upload_file_path)
+            self.client.send_one_file(entity, file, False, None, 3)
+            self.client._send_file_message.assert_has_calls([call(entity, file, None, AnyArg())] * 3)
+
     def test_send_files(self):
-        entity = 'foo'
-        mock_client = MagicMock(max_caption_length=200)
-        file = File(mock_client, self.upload_file_path)
-        self.client.send_files(entity, [file])
-        self.client.send_file.assert_called_once_with(
-            entity, file, thumb=None, file_size=file.file_size,
-            caption=os.path.basename(self.upload_file_path).split('.')[0], force_document=False,
-            progress_callback=AnyArg(), attributes=[],
-        )
+        with self.subTest("Test send files"):
+            entity = 'foo'
+            file = File(MagicMock(max_caption_length=200), self.upload_file_path)
+            self.client.send_files(entity, [file])
+            self.client.send_file.assert_called_once_with(
+                entity, file, thumb=None, file_size=file.file_size,
+                caption=os.path.basename(self.upload_file_path).split('.')[0], force_document=False,
+                progress_callback=AnyArg(), attributes=[],
+            )
+        with self.subTest("Test send files with thumb"), \
+                patch.object(File, "get_thumbnail", return_value="thumb.jpg"), \
+                patch('telegram_upload.client.telegram_upload_client.os') as mock_os:
+            mock_os.path.lexists.return_value = True
+            entity = 'foo'
+            file = File(MagicMock(max_caption_length=200), self.upload_file_path)
+            self.client.send_files(entity, [file])
+            self.client.send_file.assert_called_with(
+                entity, file, thumb="thumb.jpg", file_size=file.file_size,
+                caption=os.path.basename(self.upload_file_path).split('.')[0], force_document=False,
+                progress_callback=AnyArg(), attributes=[],
+            )
+            mock_os.remove.assert_called_once_with("thumb.jpg")
+        with self.subTest("Test send files with delete mode"), patch('os.remove') as mock_remove:
+            file = File(MagicMock(max_caption_length=200), self.upload_file_path)
+            self.client.send_files(entity, [file], delete_on_success=True)
+            self.client.send_file.assert_called_with(
+                entity, file, thumb=None, file_size=file.file_size,
+                caption=os.path.basename(self.upload_file_path).split('.')[0], force_document=False,
+                progress_callback=AnyArg(), attributes=[],
+            )
+            mock_remove.assert_called_once_with(self.upload_file_path)
 
     def test_send_files_data_loss(self):
         mock_client = MagicMock(max_caption_length=200)
