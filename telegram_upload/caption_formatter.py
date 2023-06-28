@@ -25,7 +25,7 @@ else:
 
 CHUNK_SIZE = 4096
 VALID_TYPES: Tuple[Any, ...] = (str, int, float, complex, bool, datetime.datetime, datetime.date, datetime.time)
-AUTHORIZED_METHODS = (Path.absolute, Path.home)
+AUTHORIZED_METHODS = (Path.home,)
 AUTHORIZED_STRING_METHODS = ("title", "capitalize", "lower", "upper", "swapcase", "strip", "lstrip", "rstrip")
 AUTHORIZED_DT_METHODS = (
     "astimezone", "ctime", "date", "dst", "isoformat", "isocalendar", "isoformat", "isoweekday", "now", "time",
@@ -272,6 +272,14 @@ class FileMixin:
     def mimetype(self):
         mimetypes.init()
         return mimetypes.guess_type(str(self))[0]
+
+    @cached_property
+    def suffixes(self):
+        return ".".join(super().suffixes)
+
+    @property
+    def absolute(self):
+        return super().absolute()
 
 
 class FilePath(FileMixin, Path):
