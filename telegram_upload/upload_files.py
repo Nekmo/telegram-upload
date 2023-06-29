@@ -1,3 +1,4 @@
+import datetime
 import math
 import os
 
@@ -11,6 +12,7 @@ from hachoir.metadata.metadata import RootMetadata
 from hachoir.metadata.video import MP4Metadata
 from telethon.tl.types import DocumentAttributeVideo, DocumentAttributeFilename
 
+from telegram_upload.caption_formatter import CaptionFormatter, FilePath
 from telegram_upload.exceptions import TelegramInvalidFile, ThumbError
 from telegram_upload.utils import scantree, truncate
 from telegram_upload.video import get_video_thumb, video_metadata
@@ -166,7 +168,16 @@ class File(FileIO):
 
     @property
     def file_caption(self) -> str:
-        return truncate(self._caption if self._caption is not None else self.short_name, self.client.max_caption_length)
+        """Get file caption. If caption parameter is not set, return file name.
+        If caption is set, format it with CaptionFormatter.
+        Anyways, truncate caption to max_caption_length.
+        """
+        if self._caption is not None:
+            formatter = CaptionFormatter()
+            caption = formatter.format(self._caption, file=FilePath(self.path), now=datetime.datetime.now())
+        else:
+            caption = self.short_name
+        return truncate(caption, self.client.max_caption_length)
 
     def get_thumbnail(self):
         thumb = None

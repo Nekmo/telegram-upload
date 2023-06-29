@@ -3,7 +3,10 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch, MagicMock, mock_open, call
 
-from telegram_upload.caption_formatter import Duration, FileSize, FileMedia, FilePath, CHUNK_SIZE
+from click.testing import CliRunner
+
+from telegram_upload.caption_formatter import Duration, FileSize, FileMedia, FilePath, CHUNK_SIZE, CaptionFormatter, \
+    test_caption_format
 
 
 class TestDuration(unittest.TestCase):
@@ -368,3 +371,41 @@ class TestFilePath(unittest.TestCase):
         mock_cwd.return_value = Path("/home/user")
         file_path = FilePath("/home/user/file.tar.gz")
         self.assertEqual("file.tar.gz", str(file_path.relative))
+
+
+class TestCaptionFormatter(unittest.TestCase):
+    """Test the CaptionFormatter class."""
+
+    def test_get_field(self):
+        """Test the get_field method."""
+        with self.subTest("Test with a valid key"):
+            self.assertEqual(("value", "key"), CaptionFormatter().get_field("key", (), {"key": "value"}))
+        with self.subTest("Test with an undefined key"):
+            self.assertEqual(("{key}", "key"), CaptionFormatter().get_field("key", (), {}))
+        with self.subTest("Test with a private key"):
+            obj = MagicMock()
+            obj._private = 123
+            self.assertEqual(("{obj._private}", "obj"), CaptionFormatter().get_field("obj._private", (), obj))
+        with self.subTest("Test with a method"):
+            self.assertEqual(("Value", "key"), CaptionFormatter().get_field("key.title", (), {"key": "value"}))
+        with self.subTest("Test with a unsupported key"):
+            self.assertEqual(("{key}", "key"), CaptionFormatter().get_field("key", (), {"key": []}))
+
+    def test_format(self):
+        """Test the format method."""
+        with self.subTest("Test with a valid key"):
+            self.assertEqual("Value", CaptionFormatter().format("{key}", key="Value"))
+        with self.subTest("Test with a malformed key"):
+            self.assertEqual("{key", CaptionFormatter().format("{key", key="Value"))
+
+
+class TestTestCaptionFormat(unittest.TestCase):
+    """Test the test_caption_format function."""
+
+    @patch("telegram_upload.caption_formatter.print")
+    def test_test_caption_format(self, mock_print: MagicMock):
+        """Test the test_caption_format function."""
+        runner = CliRunner()
+        result = runner.invoke(test_caption_format, [__file__, "{file.stem}"])
+        self.assertEqual(0, result.exit_code)
+        mock_print.assert_called_once_with(__file__.split("/")[-1].split(".")[0])
