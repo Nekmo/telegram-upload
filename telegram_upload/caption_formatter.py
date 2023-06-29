@@ -7,7 +7,7 @@ import sys
 import zlib
 from pathlib import Path, PosixPath, WindowsPath
 from string import Formatter
-from typing import Any, Sequence, Mapping, Tuple
+from typing import Any, Sequence, Mapping, Tuple, Optional
 
 import click
 
@@ -40,19 +40,19 @@ class Duration:
         self.seconds = seconds
 
     @property
-    def as_minutes(self):
+    def as_minutes(self) -> int:
         return self.seconds // 60
 
     @property
-    def as_hours(self):
+    def as_hours(self) -> int:
         return self.as_minutes // 60
 
     @property
-    def as_days(self):
+    def as_days(self) -> int:
         return self.as_hours // 24
 
     @property
-    def for_humans(self):
+    def for_humans(self) -> str:
         words = ["year", "day", "hour", "minute", "second"]
 
         if not self.seconds:
@@ -80,10 +80,10 @@ class Duration:
             else:
                 return ", ".join(duration[:-1]) + " and " + duration[-1]
 
-    def __int__(self):
+    def __int__(self) -> int:
         return self.seconds
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.seconds)
 
 
@@ -92,31 +92,31 @@ class FileSize:
         self.size = size
 
     @property
-    def as_kilobytes(self):
+    def as_kilobytes(self) -> int:
         return self.size // 1000
 
     @property
-    def as_megabytes(self):
+    def as_megabytes(self) -> int:
         return self.as_kilobytes // 1000
 
     @property
-    def as_gigabytes(self):
+    def as_gigabytes(self) -> int:
         return self.as_megabytes // 1000
 
     @property
-    def as_kibibytes(self):
+    def as_kibibytes(self) -> int:
         return self.size // 1024
 
     @property
-    def as_mebibytes(self):
+    def as_mebibytes(self) -> int:
         return self.as_kibibytes // 1024
 
     @property
-    def as_gibibytes(self):
+    def as_gibibytes(self) -> int:
         return self.as_mebibytes // 1024
 
     @property
-    def for_humans(self, suffix="B"):
+    def for_humans(self, suffix="B") -> str:
         num = self.size
         for unit in ("", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi"):
             if abs(num) < 1024.0:
@@ -124,10 +124,10 @@ class FileSize:
             num /= 1024.0
         return f"{num:.1f} Yi{suffix}"
 
-    def __int__(self):
+    def __int__(self) -> int:
         return self.size
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.size)
 
 
@@ -137,7 +137,7 @@ class FileMedia:
         self.metadata = video_metadata(path)
 
     @cached_property
-    def video_metadata(self):
+    def video_metadata(self) -> Any:
         metadata = self.metadata
         meta_groups = None
         if hasattr(metadata, '_MultipleMetadata__groups'):
@@ -148,38 +148,46 @@ class FileMedia:
         return metadata
 
     @property
-    def duration(self):
+    def duration(self) -> Optional[Duration]:
         if self.metadata and self.metadata.has('duration'):
             return Duration(self.metadata.get('duration').seconds)
 
-    @property
-    def width(self):
-        return self.video_metadata.get('width') if self.video_metadata and self.video_metadata.has('width') else None
+    def _get_video_metadata(self, key: str) -> Optional[Any]:
+        if self.video_metadata and self.video_metadata.has(key):
+            return self.video_metadata.get(key)
+
+    def _get_metadata(self, key: str) -> Optional[Any]:
+        if self.metadata and self.metadata.has(key):
+            return self.metadata.get(key)
 
     @property
-    def height(self):
-        return self.video_metadata.get('height') if self.video_metadata and self.video_metadata.has('height') else None
+    def width(self) -> Optional[int]:
+        return self._get_video_metadata('width')
 
     @property
-    def title(self):
-        return self.metadata.get('title') if self.metadata and self.metadata.has('title') else None
+    def height(self) -> Optional[int]:
+        return self._get_video_metadata('height')
 
     @property
-    def artist(self):
-        return self.metadata.get('artist') if self.metadata and self.metadata.has('artist') else None
+    def title(self) -> Optional[str]:
+        return self._get_metadata('title')
 
     @property
-    def album(self):
-        return self.metadata.get('album') if self.metadata and self.metadata.has('album') else None
+    def artist(self) -> Optional[str]:
+        return self._get_metadata('artist')
 
     @property
-    def producer(self):
-        return self.metadata.get('producer') if self.metadata and self.metadata.has('producer') else None
+    def album(self) -> Optional[str]:
+        return self._get_metadata('album')
+
+    @property
+    def producer(self) -> Optional[str]:
+        return self._get_metadata('producer')
 
 
 class FileMixin:
 
-    def _calculate_hash(self, hash_calculator: Any):
+    def _calculate_hash(self, hash_calculator: Any) -> str:
         with open(str(self), "rb") as f:
             # Read and update hash string value in blocks
             for byte_block in iter(lambda: f.read(CHUNK_SIZE), b""):
@@ -187,47 +195,47 @@ class FileMixin:
             return hash_calculator.hexdigest()
 
     @property
-    def md5(self):
+    def md5(self) -> str:
         return self._calculate_hash(hashlib.md5())
 
     @property
-    def sha1(self):
+    def sha1(self) -> str:
         return self._calculate_hash(hashlib.sha1())
 
     @property
-    def sha224(self):
+    def sha224(self) -> str:
         return self._calculate_hash(hashlib.sha224())
 
     @property
-    def sha256(self):
+    def sha256(self) -> str:
         return self._calculate_hash(hashlib.sha256())
 
     @property
-    def sha384(self):
+    def sha384(self) -> str:
         return self._calculate_hash(hashlib.sha384())
 
     @property
-    def sha512(self):
+    def sha512(self) -> str:
         return self._calculate_hash(hashlib.sha512())
 
     @property
-    def sha3_224(self):
+    def sha3_224(self) -> str:
         return self._calculate_hash(hashlib.sha3_224())
 
     @property
-    def sha3_256(self):
+    def sha3_256(self) -> str:
         return self._calculate_hash(hashlib.sha3_256())
 
     @property
-    def sha3_384(self):
+    def sha3_384(self) -> str:
         return self._calculate_hash(hashlib.sha3_384())
 
     @property
-    def sha3_512(self):
+    def sha3_512(self) -> str:
         return self._calculate_hash(hashlib.sha3_512())
 
     @property
-    def crc32(self):
+    def crc32(self) -> str:
         with open(str(self), "rb") as f:
             calculated_hash = 0
             # Read and update hash string value in blocks
@@ -236,7 +244,7 @@ class FileMixin:
             return "%08X" % (calculated_hash & 0xFFFFFFFF)
 
     @property
-    def adler32(self):
+    def adler32(self) -> str:
         with open(str(self), "rb") as f:
             calculated_hash = 1
             # Read and update hash string value in blocks
@@ -247,44 +255,44 @@ class FileMixin:
             return hex(calculated_hash)[2:10].zfill(8)
 
     @cached_property
-    def _file_stat(self):
+    def _file_stat(self) -> os.stat_result:
         return os.stat(str(self))
 
     @cached_property
-    def ctime(self):
+    def ctime(self) -> datetime.datetime:
         return datetime.datetime.fromtimestamp(self._file_stat.st_ctime)
 
     @cached_property
-    def mtime(self):
+    def mtime(self) -> datetime.datetime:
         return datetime.datetime.fromtimestamp(self._file_stat.st_mtime)
 
     @cached_property
-    def atime(self):
+    def atime(self) -> datetime.datetime:
         return datetime.datetime.fromtimestamp(self._file_stat.st_atime)
 
     @cached_property
-    def size(self):
+    def size(self) -> FileSize:
         return FileSize(self._file_stat.st_size)
 
     @cached_property
-    def media(self):
+    def media(self) -> FileMedia:
         return FileMedia(str(self))
 
     @cached_property
-    def mimetype(self):
+    def mimetype(self) -> Optional[str]:
         mimetypes.init()
         return mimetypes.guess_type(str(self))[0]
 
     @cached_property
-    def suffixes(self):
+    def suffixes(self) -> str:
         return ".".join(super().suffixes)
 
     @property
-    def absolute(self):
+    def absolute(self) -> "FilePath":
         return super().absolute()
 
     @property
-    def relative(self):
+    def relative(self) -> "FilePath":
         return self.relative_to(Path.cwd())
 
 
@@ -338,7 +346,7 @@ class CaptionFormatter(Formatter):
 @click.command()
 @click.argument('file', type=click.Path(exists=True))
 @click.argument('caption_format', type=str)
-def test_caption_format(file: str, caption_format: str):
+def test_caption_format(file: str, caption_format: str) -> None:
     """Test the caption format on a given file"""
     file_path = FilePath(file)
     formatter = CaptionFormatter()
