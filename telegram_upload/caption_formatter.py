@@ -9,6 +9,8 @@ from pathlib import Path, PosixPath, WindowsPath
 from string import Formatter
 from typing import Any, Sequence, Mapping, Tuple
 
+import click
+
 from telegram_upload.video import video_metadata
 
 try:
@@ -28,8 +30,8 @@ VALID_TYPES: Tuple[Any, ...] = (str, int, float, complex, bool, datetime.datetim
 AUTHORIZED_METHODS = (Path.home,)
 AUTHORIZED_STRING_METHODS = ("title", "capitalize", "lower", "upper", "swapcase", "strip", "lstrip", "rstrip")
 AUTHORIZED_DT_METHODS = (
-    "astimezone", "ctime", "date", "dst", "isoformat", "isocalendar", "isoformat", "isoweekday", "now", "time",
-    "timestamp", "timetuple", "timetz", "today", "toordinal", "tzname", "utcnow", "utcoffset", "utctimetuple", "weekday"
+    "astimezone", "ctime", "date", "dst", "isoformat", "isoweekday", "now", "time",
+    "timestamp", "today", "toordinal", "tzname", "utcnow", "utcoffset", "weekday"
 )
 
 
@@ -281,6 +283,10 @@ class FileMixin:
     def absolute(self):
         return super().absolute()
 
+    @property
+    def relative(self):
+        return self.relative_to(Path.cwd())
+
 
 class FilePath(FileMixin, Path):
     def __new__(cls, *args, **kwargs):
@@ -315,7 +321,7 @@ class CaptionFormatter(Formatter):
                     (has_self and isinstance(obj.__self__, datetime.datetime)
                      and obj.__name__ in AUTHORIZED_DT_METHODS):
                 obj = obj()
-            if not isinstance(obj, VALID_TYPES + (WindowsFilePath, PosixFilePath, FilePath)):
+            if not isinstance(obj, VALID_TYPES + (WindowsFilePath, PosixFilePath, FilePath, FileSize, Duration)):
                 raise TypeError(f'Invalid type for {field_name}: {type(obj)}')
             return obj, first
         except Exception:
@@ -327,3 +333,18 @@ class CaptionFormatter(Formatter):
             return super().format(__format_string, *args, **kwargs)
         except ValueError:
             return __format_string
+
+
+@click.command()
+@click.argument('file', type=click.Path(exists=True))
+@click.argument('caption_format', type=str)
+def test_caption_format(file: str, caption_format: str):
+    """Test the caption format on a given file"""
+    file_path = FilePath(file)
+    formatter = CaptionFormatter()
+    print(formatter.format(caption_format, file=file_path, now=datetime.datetime.now()))
+
+
+if __name__ == '__main__':
+    # Testing mode
+    test_caption_format()

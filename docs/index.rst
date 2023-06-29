@@ -21,6 +21,7 @@ Contents
    installation
    readme
    usage
+   caption_format
    troubleshooting
    contributing
    authors

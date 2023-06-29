@@ -144,6 +144,29 @@ An example with credentials::
 
     socks4://user:pass@proxy.my.site:1080
 
+Caption message
+===============
+You can add a caption message to the file to upload using the ``--caption`` parameter::
+
+    $ telegram-upload image.jpg --caption "This is a caption"
+
+This parameter support variables using the ``{}`` syntax. For example::
+
+    $ telegram-upload image.jpg --caption "This is a caption for {file.stem.capitalize}"
+
+The ``{file}`` variable is the file path. The ``{file.stem}`` variable is the file name without extension. The
+``{file.stem.capitalize}`` variable is the file name without extension with the first letter in uppercase. The
+``{file}`` variable has attributes for get info about the file like their size, their creation date, their checksums
+(md5, sha1, sha256...), their media info (width, height, artist...) and more. For example::
+
+    $ telegram-upload image.jpg --caption "{file.media.width}x{file.media.height}px {file.media.duration.for_humans}"
+
+If you want to use the ``{}`` syntax in the caption message, you can escape it using the brace twice. For example::
+
+    $ telegram-upload image.jpg --caption "This is a caption with {{}}"
+
+For get more info about the variables, see the :ref:`caption_format` section.
+
 Split files
 ===========
 By default, when trying to **upload** a file larger than the supported size by Telegram, an error will occur. However,
@@ -162,7 +185,7 @@ To join the split files using the *split* option, you can use in GNU/Linux:
 
 .. code-block:: bash
 
-    ~ $ cat myfile.tar.* > myfile.tar
+    $ cat myfile.tar.* > myfile.tar
 
 In windows there are different programs like `7z <https://7-zip.org/>`_ or `GSplit <https://www.gdgsoft.com/gsplit>`_.
 
@@ -177,4 +200,4 @@ The syntax is:
 
 .. code-block::
 
-    ~ $ telegram-download --split-files <keep|join>
+    $ telegram-download --split-files <keep|join>
