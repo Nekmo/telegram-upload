@@ -92,13 +92,13 @@ chat. However you can define the 👨 destination. For file upload the argument 
 
 .. code-block::
 
-    ~ $ telegram-upload --to telegram.me/joinchat/AAAAAEkk2WdoDrB4-Q8-gg video.mkv
+    $ telegram-upload --to telegram.me/joinchat/AAAAAEkk2WdoDrB4-Q8-gg video.mkv
 
 You can download files from a specific chat using the --from <entity> parameter. For example:
 
 .. code-block::
 
-    ~ $ telegram-download --from username
+    $ telegram-download --from username
 
 You can see all `the possible values for the entity in the documentation <https://docs.nekmo.org/telegram-upload/usage.html#set-recipient-or-sender>`_.
 
@@ -154,10 +154,10 @@ Run telegram-upload without installing it on your system using Docker. Instead o
 and ``telegram-download`` you should use ``upload`` and ``download``. Usage::
 
 
-    docker run -v <files_dir>:/files/
-               -v <config_dir>:/config
-               -it nekmo/telegram-upload:master
-               <command> <args>
+    $ docker run -v <files_dir>:/files/
+                 -v <config_dir>:/config
+                 -it nekmo/telegram-upload:master
+                 <command> <args>
 
 * ``<files_dir>``: upload or download directory.
 * ``<config_dir>``: Directory that will be created to store the telegram-upload configuration.
@@ -167,10 +167,10 @@ and ``telegram-download`` you should use ``upload`` and ``download``. Usage::
 
 For example::
 
-    docker run -v /media/data/:/files/
-               -v $PWD/config:/config
-               -it nekmo/telegram-upload:master
-               upload file_to_upload.txt
+    $ docker run -v /media/data/:/files/
+                 -v $PWD/config:/config
+                 -it nekmo/telegram-upload:master
+                 upload file_to_upload.txt
 
 ❤️ Thanks
 =========
