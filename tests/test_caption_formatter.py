@@ -1,7 +1,9 @@
+import hashlib
+import sys
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, mock_open, call
 
-from telegram_upload.caption_formatter import Duration, FileSize, FileMedia
+from telegram_upload.caption_formatter import Duration, FileSize, FileMedia, FilePath, CHUNK_SIZE
 
 
 class TestDuration(unittest.TestCase):
@@ -91,6 +93,7 @@ class TestFileMedia(unittest.TestCase):
         self.file_media = FileMedia("video.mkv")
         self.mock_metadata = self.file_media.metadata
 
+    @unittest.skipIf(sys.version_info < (3, 8), "Unsupported in Python 3.7")
     def test_video_metadata(self):
         """Test the video_metadata attribute."""
         with self.subTest("Test mkv video"):
@@ -184,3 +187,113 @@ class TestFileMedia(unittest.TestCase):
         """Test the producer attribute."""
         self.assertEqual(mock_get_metadata.return_value, self.file_media.producer)
         mock_get_metadata.assert_called_once_with("producer")
+
+
+class TestFilePath(unittest.TestCase):
+    """Test the FilePath class."""
+
+    def setUp(self) -> None:
+        """Set up the test case."""
+        self.file_path = FilePath("file.txt")
+
+    @patch("builtins.open")
+    def test_calculate_hash(self, mock_open: MagicMock):
+        """Test the calculate_hash method."""
+        mock_open.return_value.__enter__.return_value.read.side_effect = [b"abc", b"def"]
+        mock_hash_calculator = MagicMock()
+        self.assertEqual(
+            mock_hash_calculator.hexdigest.return_value, self.file_path._calculate_hash(mock_hash_calculator)
+        )
+        mock_open.assert_called_once_with("file.txt", "rb")
+        mock_open.return_value.__enter__.return_value.read.assert_has_calls([call(CHUNK_SIZE)] * 3)
+        mock_hash_calculator.update.assert_has_calls([call(b"abc"), call(b"def")])
+
+    @patch("telegram_upload.caption_formatter.hashlib")
+    def test_md5(self, mock_hashlib: MagicMock):
+        """Test the md5 attribute."""
+        mock_calculate_hash = MagicMock()
+        self.file_path._calculate_hash = mock_calculate_hash
+        self.assertEqual(mock_calculate_hash.return_value, self.file_path.md5)
+        mock_calculate_hash.assert_called_once_with(mock_hashlib.md5.return_value)
+
+    @patch("telegram_upload.caption_formatter.hashlib")
+    def test_sha1(self, mock_hashlib: MagicMock):
+        """Test the sha1 attribute."""
+        mock_calculate_hash = MagicMock()
+        self.file_path._calculate_hash = mock_calculate_hash
+        self.assertEqual(mock_calculate_hash.return_value, self.file_path.sha1)
+        mock_calculate_hash.assert_called_once_with(mock_hashlib.sha1.return_value)
+
+    @patch("telegram_upload.caption_formatter.hashlib")
+    def test_sha224(self, mock_hashlib: MagicMock):
+        """Test the sha224 attribute."""
+        mock_calculate_hash = MagicMock()
+        self.file_path._calculate_hash = mock_calculate_hash
+        self.assertEqual(mock_calculate_hash.return_value, self.file_path.sha224)
+        mock_calculate_hash.assert_called_once_with(mock_hashlib.sha224.return_value)
+
+    @patch("telegram_upload.caption_formatter.hashlib")
+    def test_sha256(self, mock_hashlib: MagicMock):
+        """Test the sha256 attribute."""
+        mock_calculate_hash = MagicMock()
+        self.file_path._calculate_hash = mock_calculate_hash
+        self.assertEqual(mock_calculate_hash.return_value, self.file_path.sha256)
+        mock_calculate_hash.assert_called_once_with(mock_hashlib.sha256.return_value)
+
+    @patch("telegram_upload.caption_formatter.hashlib")
+    def test_sha384(self, mock_hashlib: MagicMock):
+        """Test the sha384 attribute."""
+        mock_calculate_hash = MagicMock()
+        self.file_path._calculate_hash = mock_calculate_hash
+        self.assertEqual(mock_calculate_hash.return_value, self.file_path.sha384)
+        mock_calculate_hash.assert_called_once_with(mock_hashlib.sha384.return_value)
+
+    @patch("telegram_upload.caption_formatter.hashlib")
+    def test_sha512(self, mock_hashlib: MagicMock):
+        """Test the sha512 attribute."""
+        mock_calculate_hash = MagicMock()
+        self.file_path._calculate_hash = mock_calculate_hash
+        self.assertEqual(mock_calculate_hash.return_value, self.file_path.sha512)
+        mock_calculate_hash.assert_called_once_with(mock_hashlib.sha512.return_value)
+
+    @patch("telegram_upload.caption_formatter.hashlib")
+    def test_sha3_224(self, mock_hashlib: MagicMock):
+        """Test the sha3_224 attribute."""
+        mock_calculate_hash = MagicMock()
+        self.file_path._calculate_hash = mock_calculate_hash
+        self.assertEqual(mock_calculate_hash.return_value, self.file_path.sha3_224)
+        mock_calculate_hash.assert_called_once_with(mock_hashlib.sha3_224.return_value)
+
+    @patch("telegram_upload.caption_formatter.hashlib")
+    def test_sha3_256(self, mock_hashlib: MagicMock):
+        """Test the sha3_256 attribute."""
+        mock_calculate_hash = MagicMock()
+        self.file_path._calculate_hash = mock_calculate_hash
+        self.assertEqual(mock_calculate_hash.return_value, self.file_path.sha3_256)
+        mock_calculate_hash.assert_called_once_with(mock_hashlib.sha3_256.return_value)
+
+    @patch("telegram_upload.caption_formatter.hashlib")
+    def test_sha3_384(self, mock_hashlib: MagicMock):
+        """Test the sha3_384 attribute."""
+        mock_calculate_hash = MagicMock()
+        self.file_path._calculate_hash = mock_calculate_hash
+        self.assertEqual(mock_calculate_hash.return_value, self.file_path.sha3_384)
+        mock_calculate_hash.assert_called_once_with(mock_hashlib.sha3_384.return_value)
+
+    @patch("telegram_upload.caption_formatter.hashlib")
+    def test_sha3_512(self, mock_hashlib: MagicMock):
+        """Test the sha3_512 attribute."""
+        mock_calculate_hash = MagicMock()
+        self.file_path._calculate_hash = mock_calculate_hash
+        self.assertEqual(mock_calculate_hash.return_value, self.file_path.sha3_512)
+        mock_calculate_hash.assert_called_once_with(mock_hashlib.sha3_512.return_value)
+
+    @patch("builtins.open", mock_open(read_data=b"abcdef"))
+    def test_crc32(self):
+        """Test the crc32 attribute."""
+        self.assertEqual("4B8E39EF", self.file_path.crc32)
+
+    @patch("builtins.open", mock_open(read_data=b"abcdef"))
+    def test_adler32(self):
+        """Test the adler32 attribute."""
+        self.assertEqual("081e0256", self.file_path.adler32)
