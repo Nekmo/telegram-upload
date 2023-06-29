@@ -1,6 +1,6 @@
-import hashlib
 import sys
 import unittest
+from pathlib import Path
 from unittest.mock import patch, MagicMock, mock_open, call
 
 from telegram_upload.caption_formatter import Duration, FileSize, FileMedia, FilePath, CHUNK_SIZE
@@ -27,6 +27,8 @@ class TestDuration(unittest.TestCase):
             self.assertEqual("now", Duration(0).for_humans)
         with self.subTest("Test seconds"):
             self.assertEqual("1 second", Duration(1).for_humans)
+        with self.subTest("Test two units"):
+            self.assertEqual("1 minute and 1 second", Duration(61).for_humans)
         with self.subTest("Test all units"):
             self.assertEqual("3 years, 333 days, 21 hours, 33 minutes and 9 seconds", Duration(123456789).for_humans)
 
@@ -297,3 +299,72 @@ class TestFilePath(unittest.TestCase):
     def test_adler32(self):
         """Test the adler32 attribute."""
         self.assertEqual("081e0256", self.file_path.adler32)
+
+    @patch("telegram_upload.caption_formatter.os.stat")
+    def test_file_stat(self, mock_os_stat: MagicMock):
+        """Test the file_stat attribute."""
+        self.assertEqual(mock_os_stat.return_value, self.file_path._file_stat)
+        mock_os_stat.assert_called_once_with("file.txt")
+
+    @patch("telegram_upload.caption_formatter.datetime")
+    def test_ctime(self, mock_datetime: MagicMock):
+        """Test the ctime attribute."""
+        mock_file_stat = MagicMock()
+        self.file_path._file_stat = mock_file_stat
+        self.assertEqual(mock_datetime.datetime.fromtimestamp.return_value, self.file_path.ctime)
+        mock_datetime.datetime.fromtimestamp.assert_called_once_with(mock_file_stat.st_ctime)
+
+    @patch("telegram_upload.caption_formatter.datetime")
+    def test_mtime(self, mock_datetime: MagicMock):
+        """Test the mtime attribute."""
+        mock_file_stat = MagicMock()
+        self.file_path._file_stat = mock_file_stat
+        self.assertEqual(mock_datetime.datetime.fromtimestamp.return_value, self.file_path.mtime)
+        mock_datetime.datetime.fromtimestamp.assert_called_once_with(mock_file_stat.st_mtime)
+
+    @patch("telegram_upload.caption_formatter.datetime")
+    def test_atime(self, mock_datetime: MagicMock):
+        """Test the atime attribute."""
+        mock_file_stat = MagicMock()
+        self.file_path._file_stat = mock_file_stat
+        self.assertEqual(mock_datetime.datetime.fromtimestamp.return_value, self.file_path.atime)
+        mock_datetime.datetime.fromtimestamp.assert_called_once_with(mock_file_stat.st_atime)
+
+    @patch("telegram_upload.caption_formatter.FileSize")
+    def test_size(self, mock_file_size: MagicMock):
+        """Test the size attribute."""
+        mock_file_stat = MagicMock()
+        self.file_path._file_stat = mock_file_stat
+        self.assertEqual(mock_file_size.return_value, self.file_path.size)
+        mock_file_size.assert_called_once_with(mock_file_stat.st_size)
+
+    @patch("telegram_upload.caption_formatter.FileMedia")
+    def test_media(self, mock_file_media: MagicMock):
+        """Test the media attribute."""
+        self.assertEqual(mock_file_media.return_value, self.file_path.media)
+        mock_file_media.assert_called_once_with(str(self.file_path))
+
+    @patch("telegram_upload.caption_formatter.mimetypes")
+    def test_mimetype(self, mock_mimetypes: MagicMock):
+        """Test the mimetype attribute."""
+        self.assertEqual(mock_mimetypes.guess_type.return_value.__getitem__.return_value, self.file_path.mimetype)
+        mock_mimetypes.guess_type.assert_called_once_with(str(self.file_path))
+        mock_mimetypes.guess_type.return_value.__getitem__.assert_called_once_with(0)
+        mock_mimetypes.init.assert_called_once_with()
+
+    def test_suffixes(self):
+        """Test the suffixes attribute."""
+        file_path = FilePath("file.tar.gz")
+        self.assertEqual(".tar.gz", file_path.suffixes)
+
+    def test_absolute(self):
+        """Test the absolute attribute."""
+        file_path = FilePath("/home/user/file.tar.gz")
+        self.assertEqual("/home/user/file.tar.gz", str(file_path.absolute))
+
+    @patch("telegram_upload.caption_formatter.Path.cwd")
+    def test_relative(self, mock_cwd: MagicMock):
+        """Test the relative attribute."""
+        mock_cwd.return_value = Path("/home/user")
+        file_path = FilePath("/home/user/file.tar.gz")
+        self.assertEqual("file.tar.gz", str(file_path.relative))

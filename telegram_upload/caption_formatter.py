@@ -285,7 +285,7 @@ class FileMixin:
 
     @cached_property
     def suffixes(self) -> str:
-        return ".".join(super().suffixes)
+        return "".join(super().suffixes)
 
     @property
     def absolute(self) -> "FilePath":
