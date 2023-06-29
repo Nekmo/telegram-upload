@@ -2,6 +2,15 @@
 History
 =======
 
+0.7.0 (2023-06-29)
+------------------
+
+* Issue #140: Speed up upload & download speed
+* Issue #115: Add support for variables in the caption argument
+* Issue #159: Telegram premium
+* Issue #176: Bug uploading .flv files
+* Issue #198: Improve README
+
 0.6.1 (2023-06-17)
 ------------------
 
