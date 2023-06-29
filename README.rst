@@ -33,8 +33,8 @@
 ###############
 telegram-upload
 ###############
-Telegram-upload uses your personal Telegram account to **upload** and **download** files up to 2GiB (bots are limited to 50
-MiB). Turn Telegram into your personal ☁ cloud!
+Telegram-upload uses your **personal Telegram account** to **upload** and **download** files up to **4 GiB** (2 GiB for
+free users). Turn Telegram into your personal ☁ cloud!
 
 To **install 🔧 telegram-upload**, run this command in your terminal:
 
@@ -133,17 +133,19 @@ it is advisable to create a session file for each machine.
 
 More options
 ------------
-Telegram-upload has more options available, like customizing the files thumbnail or configuring a proxy.
+Telegram-upload has more options available, like customizing the files thumbnail, set a caption message (including
+variables) or configuring a proxy.
 `Read the documentation <https://docs.nekmo.org/telegram-upload/usage.html#telegram-download>`_ for more info.
 
 💡 Features
 ===========
 
-* **Upload** and **download** multiples files (up to 2GiB per file).
+* **Upload** and **download** multiples files  (up to 4 GiB per file for premium users).
 * **Interactive** mode.
 * Add video **thumbs**.
 * **Split** and **join** large files.
 * **Delete** local or remote file on success.
+* Use **variables** in the **caption** message.
 * ... And **more**.
 
 🐋 Docker
