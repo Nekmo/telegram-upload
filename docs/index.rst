@@ -22,6 +22,7 @@ Contents
    readme
    usage
    caption_format
+   supported_file_types
    troubleshooting
    contributing
    authors
