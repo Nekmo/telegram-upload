@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Upload (and download) files to Telegram up to 2 GiB using your account
+"""Upload (and download) files to Telegram up to 4 GiB using your account.
 """
 import copy
 import os
