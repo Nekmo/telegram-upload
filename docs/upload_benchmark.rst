@@ -48,3 +48,85 @@ command::
     $ python3 ./upload_benchmark.py rst
 
 The following results were obtained using the ``upload_benchmark.py`` script.
+
+
+Small files (512 KiB)
+---------------------
+The following table shows the time it takes to upload a 512 KiB file using different number of parallel chunks.
+
+.. include:: benchmark_512.0_KiB.rst
+
+Each file is **uploaded 10 times** to obtain the minimum, maximum, the average and the median time. The data can be
+visualized in the following graph:
+
+.. image:: benchmark_512.0_KiB.png
+    :width: 100%
+    :alt: 512.0 KiB benchmark graph
+
+Observing the results from 4 blocks in parallel there is no improvement in the upload time. This is because the file
+size is 512 KiB and the chunk size is 128 KiB. This means that the file is uploaded in 4 chunks
+*(512 KiB / 128 KiB = 4)*. The small ups and downs are due to external factors.
+
+
+Medium files (20 MiB)
+---------------------
+The following table shows the time it takes to upload a 20 MiB file using different number of parallel chunks.
+
+.. include:: benchmark_20.0_MiB.rst
+
+Each file is **uploaded 10 times** to obtain the minimum, maximum, the average and the median time. The data can be
+visualized in the following graph:
+
+.. image:: benchmark_20.0_MiB.png
+    :width: 100%
+    :alt: 20.0 MiB benchmark graph
+
+The speed boost decreases following a negative exponential curve. The improvement between 1 and 2 parts in parallel is
+noticeable. Increasing the number of parts in parallel the improvement is less and less. With this file size the chunk
+size is 128 KiB.
+
+
+Big files (200 MiB)
+-------------------
+The following table shows the time it takes to upload a 200 MiB file using different number of parallel chunks.
+
+.. include:: benchmark_200.0_MiB.rst
+
+Each file is **uploaded 5 times** to obtain the minimum, maximum, the average and the median time. The data can be
+visualized in the following graph:
+
+.. image:: benchmark_200.0_MiB.png
+    :width: 100%
+    :alt: 200.0 MiB benchmark graph
+
+The speed boost decreases following a negative exponential curve. The improvement between 1 and 2 parts in parallel is
+noticeable. Increasing the number of parts in parallel the improvement is less and less. With this file size the chunk
+size is 256 KiB.
+
+
+Full size files (2 GiB)
+-----------------------
+The following table shows the time it takes to upload a 2 GiB file using different number of parallel chunks.
+
+.. include:: benchmark_2.0_GiB.rst
+
+Each file is **uploaded 5 times** to obtain the minimum, maximum, the average and the median time. The data can be
+visualized in the following graph:
+
+.. image:: benchmark_2.0_GiB.png
+    :width: 100%
+    :alt: 2.0 GiB benchmark graph
+
+The speed boost decreases following a negative exponential curve. The improvement between 1 and 2 parts in parallel is
+noticeable. Increasing the number of parts in parallel the improvement is less and less. With this file size the chunk
+size is 512 KiB.
+
+
+Complete results
+----------------
+The following table shows the time it takes to upload a 512 KiB, 20 MiB, 200 MiB and 2 GiB files using different number
+of parallel chunks. Unlike the previous tables, all the data is included.
+
+.. include:: benchmark_full.rst
+
+The results are also available in the ``docs`` directory in the ``upload_benchmark.json`` file.

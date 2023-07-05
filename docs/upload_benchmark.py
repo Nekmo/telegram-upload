@@ -3,12 +3,13 @@ import asyncio
 import json
 import os
 import time
-from itertools import groupby
+from itertools import groupby, chain
 from statistics import mean, median
 from tempfile import NamedTemporaryFile
 from typing import Callable, Optional, TypedDict, List, cast
 
 import click
+from tabulate import tabulate
 from telethon.tl.patched import Message
 import matplotlib.pyplot as plt
 
@@ -142,6 +143,52 @@ def benchmark_file_size(client: TelegramManagerClient, size: int, repeats: int =
     }
 
 
+def save_rst_size_table(key: int, grouped: List[BenchmarkResult]):
+    """Save a table with the benchmark results for a specific size in RST format"""
+    filesize = FileSize(key)
+    maximum = max([x["benchmark"]["maximum"] for x in grouped])
+    minimum = min([x["benchmark"]["minimum"] for x in grouped])
+    average = mean([x["benchmark"]["average"] for x in grouped])
+    median_ = median([x["benchmark"]["median"] for x in grouped])
+    table = tabulate(
+        [
+            [
+                str(x["parallel"]) + (" chunks" if x["parallel"] > 1 else " chunk"),
+                f"{x['benchmark']['minimum']:.2f} sec.",
+                f"{x['benchmark']['maximum']:.2f} sec.",
+                f"{x['benchmark']['average']:.2f} sec.",
+                f"{x['benchmark']['median']:.2f} sec.",
+                f"{FileSize(key / x['benchmark']['median']).for_humans}/s",
+            ] for x in grouped
+        ],
+        headers=["Parallel", "Minimum", "Maximum", "Average", "Median", "Speed (MiB/s)"],
+        tablefmt="rst", floatfmt=".3f"
+    )
+    with open(f"benchmark_{filesize.for_humans.replace(' ', '_')}.rst", 'w') as file:
+        output = f"{table}\n\n" \
+                 f"* **Minimum time:** {minimum:.2f} sec. ({FileSize(key / minimum).for_humans}/s)\n" \
+                 f"* **Maximum time:** {maximum:.2f} sec. ({FileSize(key / maximum).for_humans}/s)\n" \
+                 f"* **Average time:** {average:.2f} sec. ({FileSize(key / average).for_humans}/s)\n" \
+                 f"* **Median time:** {median_:.2f} sec. ({FileSize(key / median_).for_humans}/s)\n"
+        file.write(output)
+
+
+def save_rst_table(results: List[BenchmarkResult]):
+    """Save a table with the benchmark results in RST format"""
+    table = tabulate(
+        chain(*[[[
+            FileSize(x["size"]).for_humans,
+            str(x["parallel"]) + (" chunks" if x["parallel"] > 1 else " chunk"),
+            f"{t:.2f} sec.",
+            f"{FileSize(x['size'] / t).for_humans}/s",
+        ] for t in x["benchmark"]["times"]] for x in results]),
+        headers=["Filesize", "Parallel", "Time", "Speed"],
+        tablefmt="rst", floatfmt=".3f"
+    )
+    with open(f"benchmark_full.rst", 'w') as file:
+        file.write(table)
+
+
 @click.group()
 def cli():
     """Console script for requirements-rating."""
@@ -198,6 +245,19 @@ def graphs(results_file):
         plt.grid()
         plt.title(f"Upload time for {filesize.for_humans} file (less time is better)")
         plt.savefig(f"benchmark_{filesize.for_humans.replace(' ', '_')}.png", dpi=150)
+
+
+@cli.command()
+@click.option('--results-file', '-f', default=RESULTS_FILE, type=click.Path(exists=True, dir_okay=False),
+              help='JSON results file')
+def rst(results_file):
+    with open(results_file, 'r') as file:
+        results: List[BenchmarkResult] = json.load(file)
+    results_grouped = groupby(results, lambda x: x["size"])
+    for key, grouped in results_grouped:
+        grouped = list(grouped)
+        save_rst_size_table(key, grouped)
+    save_rst_table(results)
 
 
 if __name__ == '__main__':

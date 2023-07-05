@@ -23,6 +23,7 @@ Contents
    usage
    caption_format
    supported_file_types
+   upload_benchmark
    troubleshooting
    contributing
    authors
