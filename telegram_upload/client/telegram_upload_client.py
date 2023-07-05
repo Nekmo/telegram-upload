@@ -138,6 +138,7 @@ class TelegramUploadClient(TelegramClient):
                 os.remove(file.path)
             if message:
                 self.forward_to(message, forward)
+                messages.append(message)
         if not has_files:
             raise MissingFileError('Files do not exist.')
         return messages
