@@ -31,6 +31,7 @@ If you are sure that Telegram-upload is not running, search for the process that
 
 As a last resort, you can restart your machine.
 
+.. _troubleshooting_429_errors:
 
 I am getting 429 errors during upload
 -------------------------------------
@@ -54,6 +55,8 @@ minimum of ``PARALLEL_UPLOAD_BLOCKS`` is one. Telegram-upload will retry connect
 ``TELEGRAM_UPLOAD_RECONNECT_TIMEOUT`` seconds before failing. All of these variables can be defined using environment
 variables.
 
+Read more about the parallel chunks in the :ref:`upload_benchmark` section.
+
 Telegram-upload does not work! An error occurs when executing it
 -----------------------------------------------------------------
 Telegram-upload is not tested with all versions of all dependencies it uses. If you have installed Telegram-upload
@@ -70,3 +73,13 @@ Before asking for help, remember to find out if `the issue already exists <https
     $ pip freeze
 
 Some problems may not be related to Telegram-upload. If possible, `Google before asking <https://google.com/>`_.
+
+Telegram-upload is very slow uploading files!
+---------------------------------------------
+Telegram-upload since version v0.7.0 uploads several parts of the file in parallel. This can increase the upload speed
+of the files. By default it uploads 4 parts of the file in parallel. You can change this value using the
+``PARALLEL_UPLOAD_BLOCKS`` environment variable (read more about this in the :ref:`troubleshooting_429_errors` section).
+Make sure you have updated Telegram-upload to the latest version and you have ``libssl`` installed on your system and
+``cryptg`` installed on your Python environment.
+
+Read more about the Telegram-upload speed in the :ref:`upload_benchmark` section.

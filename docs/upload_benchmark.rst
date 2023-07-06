@@ -1,3 +1,6 @@
+
+.. _upload_benchmark:
+
 Upload benchmarks
 =================
 The following results are a study about the performance of Telegram-upload uploading files. The results are not
