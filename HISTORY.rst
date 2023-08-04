@@ -2,6 +2,11 @@
 History
 =======
 
+0.7.1 (2023-08-04)
+------------------
+
+* Issue #215: "TypeError: __init__() got an unexpected keyword argument 'reply_to_msg_id'" in command - "telegram-upload --directories "recursive" --album"
+
 0.7.0 (2023-06-29)
 ------------------
 
