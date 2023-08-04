@@ -39,8 +39,7 @@ class TelegramUploadClient(TelegramClient):
     async def _send_album_media(self, entity, media):
         entity = await self.get_input_entity(entity)
         request = functions.messages.SendMultiMediaRequest(
-            entity, reply_to_msg_id=None, multi_media=media,
-            silent=None, schedule_date=None, clear_draft=None
+            entity, multi_media=media, silent=None, schedule_date=None, clear_draft=None
         )
         result = await self(request)
 
