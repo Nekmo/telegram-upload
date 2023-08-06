@@ -4,6 +4,9 @@
 
 |
 
+.. image:: https://raw.githubusercontent.com/Nekmo/telegram-upload/pip-rating-badge/pip-rating-badge.svg
+  :target: https://github.com/Nekmo/telegram-upload/actions/workflows/pip-rating.yml
+  :alt: pip-rating badge
 
 .. image:: https://img.shields.io/github/actions/workflow/status/Nekmo/telegram-upload/test.yml?style=flat-square&maxAge=2592000&branch=master
   :target: https://github.com/Nekmo/telegram-upload/actions?query=workflow%3ATests
