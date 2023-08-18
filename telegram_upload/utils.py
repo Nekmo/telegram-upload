@@ -52,10 +52,10 @@ async def aislice(iterator, limit):
     items = []
     i = 0
     async for value in iterator:
-        if i > limit:
-            break
-        i += 1
         items.append(value)
+        i += 1
+        if i >= limit:
+            break
     return items
 
 
